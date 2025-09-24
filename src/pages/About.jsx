@@ -10,7 +10,7 @@ function About() {
             <h1 className="text-3xl font-bold text-purple-700 mb-4">📘 About This Project</h1>
 
             <p className="text-gray-700 max-w-xl text-base leading-relaxed mb-6">
-                This is a fun and educational quiz app created to test your knowledge on world geography and popular movies using emojis. It’s built with React, Vite, and Tailwind CSS — made with love for learning and entertainment!
+                This is a fun and educational quiz app created to test your knowledge on world geography and popular movies using emojis. It’s built with React, Vite, and Tailwind CSS — made with love for learning and entertainment.
             </p>
 
             <button
