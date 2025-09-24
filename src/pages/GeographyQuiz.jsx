@@ -13,7 +13,7 @@ function GeographyQuiz() {
   const [timer, setTimer] = useState(15);
 
   useEffect(() => {
-    fetch('https://restcountries.com/v3.1/all')
+    fetch('https://restcountries.com/v3.1/all?fields=name,capital,flags,region')
       .then(res => res.json())
       .then(data => {
         const filtered = data.filter(c => c.region && c.name?.common);

@@ -13,7 +13,7 @@ function FlagQuiz() {
   const [timer, setTimer] = useState(15);
 
   useEffect(() => {
-    fetch('https://restcountries.com/v3.1/all')
+    fetch('https://restcountries.com/v3.1/all?fields=name,capital,flags')
       .then(res => res.json())
       .then(data => {
         const filtered = data
@@ -92,7 +92,7 @@ function FlagQuiz() {
       </div>
 
       <h2 className="text-2xl font-bold text-blue-700 mb-4">🏳️ Flag Quiz</h2>
-      <p className="text-gray-700 mb-6">Score: {score} / {questionCount - 1}</p>
+      <p className="text-gray-700 mb-6">Score : {score} / {questionCount - 1}</p>
 
       {question?.correct.flag && (
         <motion.img
