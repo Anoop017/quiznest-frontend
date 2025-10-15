@@ -1,125 +1,224 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FaGlobeAmericas } from 'react-icons/fa';
-import { motion } from 'framer-motion';
-import { FaArrowLeft } from 'react-icons/fa';
+// src/pages/GeographyQuiz.jsx
+import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
+import { FaGlobeAmericas, FaArrowLeft, FaCheck, FaTimes } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 
-function GeographyQuiz() {
+const QUIZ_TIME = 15;
+
+export default function GeographyQuiz() {
   const [countries, setCountries] = useState([]);
   const [question, setQuestion] = useState(null);
   const [score, setScore] = useState(0);
   const [questionCount, setQuestionCount] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [timer, setTimer] = useState(15);
+  const [timer, setTimer] = useState(QUIZ_TIME);
+  const [overlay, setOverlay] = useState(null);
+  const timerRef = useRef(null);
 
   useEffect(() => {
-    fetch('https://restcountries.com/v3.1/all?fields=name,capital,flags,region')
-      .then(res => res.json())
-      .then(data => {
-        const filtered = data.filter(c => c.region && c.name?.common);
+    async function fetchCountries() {
+      try {
+        const res = await fetch("https://quiznest-backend.onrender.com/api/countries");
+        const data = await res.json();
+        const filtered = data.countries.filter((c) => c.region && c.name);
         setCountries(filtered);
-      });
-  }, []);
-
-  useEffect(() => {
-    if (countries.length > 0) {
-      generateNewQuestion();
+        if (filtered.length > 0) generateQuestion(filtered);
+      } catch (err) {
+        console.error("Error fetching countries:", err);
+      }
     }
-  }, [countries]);
+    fetchCountries();
+    return () => clearInterval(timerRef.current);
+  }, []);
 
   useEffect(() => {
     if (!question || selectedAnswer) return;
     if (timer === 0) {
-      setSelectedAnswer({ region: '__timeout__' });
-      setTimeout(() => generateNewQuestion(), 1000);
+      setSelectedAnswer("__timeout__");
+      setOverlay("fail");
+      setTimeout(() => {
+        setOverlay(null);
+        generateQuestion();
+      }, 900);
       return;
     }
-
-    const t = setTimeout(() => setTimer(prev => prev - 1), 1000);
+    const t = setTimeout(() => setTimer((p) => p - 1), 1000);
     return () => clearTimeout(t);
   }, [timer, question, selectedAnswer]);
 
-  const generateNewQuestion = () => {
-    const correct = countries[Math.floor(Math.random() * countries.length)];
-    const regions = [...new Set(countries.map(c => c.region))].filter(Boolean);
+  const generateQuestion = (list = countries) => {
+    if (!list || list.length < 4) return;
+    const correct = list[Math.floor(Math.random() * list.length)];
+    const regions = [...new Set(list.map((c) => c.region))].filter(Boolean);
     const options = [correct.region];
-
     while (options.length < 4) {
       const random = regions[Math.floor(Math.random() * regions.length)];
       if (!options.includes(random)) options.push(random);
     }
-
     const shuffled = options.sort(() => 0.5 - Math.random());
-
-    setQuestion({ country: correct.name.common, correct: correct.region, options: shuffled });
+    setQuestion({
+      country: correct.name,
+      correct: correct.region,
+      options: shuffled,
+    });
     setSelectedAnswer(null);
-    setQuestionCount(prev => prev + 1);
-    setTimer(15);
+    setQuestionCount((p) => p + 1);
+    setTimer(QUIZ_TIME);
   };
 
   const handleAnswer = (answer) => {
     if (selectedAnswer) return;
-
     setSelectedAnswer(answer);
     if (answer === question.correct) {
-      setScore(prev => prev + 1);
+      setScore((p) => p + 1);
+      setOverlay("success");
+    } else {
+      setOverlay("fail");
     }
-
     setTimeout(() => {
-      generateNewQuestion();
-    }, 1000);
+      setOverlay(null);
+      generateQuestion();
+    }, 900);
   };
 
+  const progress = Math.max(0, (timer / QUIZ_TIME) * 100);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-400 to-cyan-600 flex flex-col items-center justify-center px-4 py-10">
-      <div className="flex justify-between items-center w-full max-w-md mb-4">
-        <Link
-          to="/"
-          className="flex items-center gap-2 text-sm text-purple-700 font-medium hover:underline hover:text-purple-900 transition-colors"
-        >
-          <FaArrowLeft />
-          Home
-        </Link>
-        <p className="text-gray-700 font-semibold">⏱️ {timer}s</p>
-      </div>
+    <div className="min-h-screen relative flex items-center justify-center overflow-hidden bg-gradient-to-br from-purple-900 via-fuchsia-800 to-indigo-900">
+      {/* Animated background orbs */}
+      <motion.div
+        className="absolute w-[450px] h-[450px] bg-gradient-to-br from-fuchsia-500 to-purple-400 rounded-full blur-3xl opacity-25 -top-40 -left-40"
+        animate={{ x: [0, 30, 0], y: [0, 40, 0] }}
+        transition={{ duration: 10, repeat: Infinity }}
+      />
+      <motion.div
+        className="absolute w-[400px] h-[400px] bg-gradient-to-tr from-indigo-400 to-pink-500 rounded-full blur-3xl opacity-25 bottom-[-80px] right-[-80px]"
+        animate={{ x: [0, -30, 0], y: [0, -40, 0] }}
+        transition={{ duration: 12, repeat: Infinity }}
+      />
 
-      <h2 className="text-2xl font-bold text-green-900 mb-4">🧭 Geography Quiz</h2>
-      <p className="text-gray-700 mb-6">Score: {score} / {questionCount - 1}</p>
+      {/* Quiz card */}
+      <motion.div
+        className="relative z-10 w-full max-w-md mx-4 p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-2xl"
+        initial={{ opacity: 0, scale: 0.96, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-white/80 hover:text-white transition"
+          >
+            <FaArrowLeft />
+            Home
+          </Link>
+          <div className="flex items-center gap-3">
+            <p className="text-white/80 bg-white/10 px-3 py-1 rounded-full text-xs">
+              Score: <span className="text-white">{score}</span>
+            </p>
+            <p className="text-white/80 bg-white/10 px-3 py-1 rounded-full text-xs">
+              ⏱ {timer}s
+            </p>
+          </div>
+        </div>
 
-      <p className="text-lg font-medium mb-6">
-        What region is <span className="font-bold">{question?.country}</span> located in?
-      </p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-5 flex items-center gap-2">
+          <FaGlobeAmericas className="text-pink-300" /> Geography Quiz
+        </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
-        {question?.options.map((option, index) => {
-          const isCorrect = option === question.correct;
-          const isSelected = selectedAnswer === option;
+        {/* Question */}
+        {question && (
+          <motion.p
+            className="text-lg text-white/90 font-medium mb-6 text-center"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            🌍 Which region does{" "}
+            <span className="font-bold text-pink-300">{question.country}</span>{" "}
+            belong to?
+          </motion.p>
+        )}
 
-          let bg = 'bg-white';
-          if (selectedAnswer) {
-            if (isSelected && isCorrect) bg = 'bg-green-500 text-white';
-            else if (isSelected && !isCorrect) bg = 'bg-red-400 text-white';
-            else if (isCorrect) bg = 'bg-green-200';
-          }
+        {/* Timer bar */}
+        <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-5">
+          <motion.div
+            className="h-full bg-gradient-to-r from-pink-400 to-fuchsia-300"
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.8 }}
+          />
+        </div>
 
-          return (
-            <motion.button
-              key={index}
-              onClick={() => handleAnswer(option)}
-              disabled={!!selectedAnswer}
-              className={`${bg} py-3 px-4 rounded-xl shadow hover:scale-105 transition-transform`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
+        {/* Options */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {question?.options.map((option, i) => {
+            const isCorrect = option === question.correct;
+            const isSelected = selectedAnswer === option;
+
+            let base =
+              "py-3 px-4 rounded-xl font-semibold transition-all text-white border border-white/10";
+            let style = "bg-white/10 hover:bg-white/15 hover:scale-105";
+            if (selectedAnswer) {
+              if (isSelected && isCorrect) style = "bg-fuchsia-500 text-white shadow-lg";
+              else if (isSelected && !isCorrect) style = "bg-rose-500 text-white";
+              else if (isCorrect) style = "bg-pink-300 text-slate-900";
+            }
+
+            return (
+              <motion.button
+                key={i}
+                onClick={() => handleAnswer(option)}
+                disabled={!!selectedAnswer}
+                className={`${base} ${style}`}
+                whileTap={{ scale: 0.97 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+              >
+                {option}
+              </motion.button>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      {/* Overlay */}
+      <AnimatePresence>
+        {overlay && (
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center z-20 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className={`px-8 py-6 rounded-2xl bg-white/20 border border-white/10 backdrop-blur-lg flex items-center gap-3 shadow-2xl ${
+                overlay === "success" ? "text-fuchsia-400" : "text-rose-400"
+              }`}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3 }}
             >
-              <FaGlobeAmericas className="mr-2" />
-              {option}
-            </motion.button>
-          );
-        })}
-      </div>
+              {overlay === "success" ? (
+                <>
+                  <FaCheck className="text-3xl" />
+                  <span className="text-white font-semibold text-lg">
+                    Correct!
+                  </span>
+                </>
+              ) : (
+                <>
+                  <FaTimes className="text-3xl" />
+                  <span className="text-white font-semibold text-lg">
+                    Wrong!
+                  </span>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
-
-export default GeographyQuiz;

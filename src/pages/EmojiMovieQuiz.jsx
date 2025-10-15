@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { FaFilm } from 'react-icons/fa';
-import { motion } from 'framer-motion';
-import { FaArrowLeft } from 'react-icons/fa';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { FaFilm, FaArrowLeft } from "react-icons/fa";
+import { motion } from "framer-motion";
 
 const quizData = [
   { emojis: '🦁👑', answer: 'The Lion King' },
@@ -130,27 +129,28 @@ const quizData = [
   { emojis: '🦈🌊', answer: 'Shark Week' },
 ];
 
-
-function EmojiMovieQuiz() {
+export default function EmojiMovieQuiz() {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [score, setScore] = useState(0);
   const [questionCount, setQuestionCount] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [timer, setTimer] = useState(20);
 
+  // Generate first question
   useEffect(() => {
     generateNewQuestion();
   }, []);
 
+  // Timer countdown
   useEffect(() => {
     if (!currentQuestion || selectedAnswer) return;
     if (timer === 0) {
-      setSelectedAnswer('__timeout__');
-      setTimeout(() => generateNewQuestion(), 1000);
+      setSelectedAnswer("__timeout__");
+      setTimeout(generateNewQuestion, 1000);
       return;
     }
 
-    const t = setTimeout(() => setTimer(prev => prev - 1), 1000);
+    const t = setTimeout(() => setTimer((prev) => prev - 1), 1000);
     return () => clearTimeout(t);
   }, [timer, selectedAnswer, currentQuestion]);
 
@@ -165,82 +165,125 @@ function EmojiMovieQuiz() {
     }
 
     const finalOptions = options.sort(() => 0.5 - Math.random());
-
     setCurrentQuestion({ ...correct, options: finalOptions });
     setSelectedAnswer(null);
-    setQuestionCount(prev => prev + 1);
+    setQuestionCount((prev) => prev + 1);
     setTimer(20);
   };
 
   const handleAnswer = (answer) => {
     if (selectedAnswer) return;
-
     setSelectedAnswer(answer);
-    if (answer === currentQuestion.answer) {
-      setScore(prev => prev + 1);
-    }
-
-    setTimeout(() => {
-      generateNewQuestion();
-    }, 1000);
+    if (answer === currentQuestion.answer) setScore((prev) => prev + 1);
+    setTimeout(generateNewQuestion, 1000);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-300 to-purple-600 flex flex-col items-center justify-center px-4 py-10">
-      <div className="flex justify-between items-center w-full max-w-md mb-4">
-        <Link
-          to="/"
-          className="flex items-center gap-2 text-sm text-purple-700 font-medium hover:underline hover:text-purple-900 transition-colors"
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 text-white">
+      {/* Floating Emojis Background */}
+      {[...Array(15)].map((_, i) => (
+        <motion.span
+          key={i}
+          className="absolute text-4xl select-none"
+          style={{
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+            opacity: 0.15,
+          }}
+          animate={{
+            y: [0, -30, 0],
+            opacity: [0.15, 0.3, 0.15],
+          }}
+          transition={{
+            repeat: Infinity,
+            duration: 6 + Math.random() * 5,
+            ease: "easeInOut",
+          }}
         >
-          <FaArrowLeft />
-          Home
-        </Link>
-        <p className="text-gray-700 font-semibold">⏱️ {timer}s</p>
-      </div>
+          🎬
+        </motion.span>
+      ))}
 
-      <h2 className="text-2xl font-bold text-purple-700 mb-4 flex items-center">
-        <FaFilm className="mr-2" /> Emoji Movie Quiz
-      </h2>
-      <p className="text-gray-700 mb-6">Score: {score} / {questionCount - 1}</p>
-
-      <motion.p
-        className="text-4xl mb-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
+      {/* Main Glass Card */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative z-10 w-full max-w-md p-8 rounded-3xl bg-white/10 backdrop-blur-lg shadow-2xl border border-white/20 text-center"
       >
-        {currentQuestion?.emojis}
-      </motion.p>
+        <div className="flex justify-between items-center mb-6">
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-sm text-white/80 hover:text-white transition"
+          >
+            <FaArrowLeft /> Home
+          </Link>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
-        {currentQuestion?.options.map((option, index) => {
-          const isCorrect = option === currentQuestion.answer;
-          const isSelected = selectedAnswer === option;
-
-          let bg = 'bg-white';
-          if (selectedAnswer) {
-            if (isSelected && isCorrect) bg = 'bg-green-500 text-white';
-            else if (isSelected && !isCorrect) bg = 'bg-red-400 text-white';
-            else if (isCorrect) bg = 'bg-green-200';
-          }
-
-          return (
-            <motion.button
-              key={index}
-              onClick={() => handleAnswer(option)}
-              disabled={!!selectedAnswer}
-              className={`${bg} py-3 px-4 rounded-xl shadow hover:scale-105 transition-transform text-sm`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <motion.div
+              className="h-2 w-24 bg-white/20 rounded-full overflow-hidden"
             >
-              {option}
-            </motion.button>
-          );
-        })}
-      </div>
+              <motion.div
+                className="h-full bg-gradient-to-r from-green-400 to-yellow-400"
+                style={{ width: `${(timer / 20) * 100}%` }}
+                transition={{ duration: 1, ease: "linear" }}
+              />
+            </motion.div>
+            ⏱️ {timer}s
+          </div>
+        </div>
+
+        <motion.h2
+          className="text-3xl font-bold mb-3 flex items-center justify-center gap-2 text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <FaFilm /> Emoji Movie Quiz
+        </motion.h2>
+
+        <p className="mb-4 text-white/70">
+          Score: <span className="text-yellow-300 font-semibold">{score}</span> /{" "}
+          {questionCount - 1}
+        </p>
+
+        <motion.div
+          key={currentQuestion?.emojis}
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="text-6xl mb-8"
+        >
+          {currentQuestion?.emojis}
+        </motion.div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {currentQuestion?.options.map((option, index) => {
+            const isCorrect = option === currentQuestion.answer;
+            const isSelected = selectedAnswer === option;
+
+            let bg = "bg-white/10 hover:bg-white/20 text-white";
+            if (selectedAnswer) {
+              if (isSelected && isCorrect) bg = "bg-green-500/80 text-white";
+              else if (isSelected && !isCorrect) bg = "bg-red-500/80 text-white";
+              else if (isCorrect) bg = "bg-green-300/60 text-black";
+            }
+
+            return (
+              <motion.button
+                key={index}
+                onClick={() => handleAnswer(option)}
+                disabled={!!selectedAnswer}
+                className={`${bg} py-3 px-4 rounded-xl shadow-lg backdrop-blur-md transition-transform transform hover:scale-105 active:scale-95`}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                {option}
+              </motion.button>
+            );
+          })}
+        </div>
+      </motion.div>
     </div>
   );
 }
-
-export default EmojiMovieQuiz;

@@ -1,140 +1,218 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FaFlag } from 'react-icons/fa';
-import { motion } from 'framer-motion';
-import { FaArrowLeft } from 'react-icons/fa';
+// src/pages/FlagQuiz.jsx
+import { useEffect, useState, useRef } from "react";
+import { Link } from "react-router-dom";
+import { FaFlag, FaArrowLeft, FaCheck, FaTimes } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 
-function FlagQuiz() {
+const QUIZ_TIME = 15;
+
+export default function FlagQuiz() {
   const [countries, setCountries] = useState([]);
   const [question, setQuestion] = useState(null);
   const [score, setScore] = useState(0);
   const [questionCount, setQuestionCount] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [timer, setTimer] = useState(15);
+  const [timer, setTimer] = useState(QUIZ_TIME);
+  const [overlay, setOverlay] = useState(null); // success | fail
+  const timerRef = useRef(null);
 
   useEffect(() => {
-    fetch('https://restcountries.com/v3.1/all?fields=name,capital,flags')
-      .then(res => res.json())
-      .then(data => {
-        const filtered = data
-          .filter(c => c.flags && c.name && c.name.common)
-          .map(c => ({
-            name: c.name.common,
-            flag: c.flags.svg,
-          }));
+    async function fetchCountries() {
+      try {
+        const res = await fetch("https://quiznest-backend.onrender.com/api/countries");
+        const data = await res.json();
+        const filtered = data.countries.map(c=>({
+          name:c.name,
+          flag:c.flag,
+        }))
+
+
         setCountries(filtered);
-      });
-  }, []);
-
-  useEffect(() => {
-    if (countries.length > 0) {
-      generateNewQuestion();
+        if (filtered.length > 0) generateQuestion(filtered);
+      } catch (err) {
+        console.error(err);
+      }
     }
-  }, [countries]);
+    fetchCountries();
+    return () => clearInterval(timerRef.current);
+  }, []);
 
   useEffect(() => {
     if (!question || selectedAnswer) return;
     if (timer === 0) {
-      setSelectedAnswer({ name: '__timeout__' });
-      setTimeout(() => generateNewQuestion(), 1000);
+      setSelectedAnswer({ name: "__timeout__" });
+      setOverlay("fail");
+      setTimeout(() => {
+        setOverlay(null);
+        generateQuestion();
+      }, 900);
       return;
     }
-
-    const t = setTimeout(() => setTimer(prev => prev - 1), 1000);
+    const t = setTimeout(() => setTimer((p) => p - 1), 1000);
     return () => clearTimeout(t);
   }, [timer, question, selectedAnswer]);
 
-  const generateNewQuestion = () => {
-    const correct = countries[Math.floor(Math.random() * countries.length)];
+  const generateQuestion = (list = countries) => {
+    if (!list || list.length < 4) return;
+    const correct = list[Math.floor(Math.random() * list.length)];
     const options = [correct];
     while (options.length < 4) {
-      const random = countries[Math.floor(Math.random() * countries.length)];
-      if (!options.find(c => c.name === random.name)) {
-        options.push(random);
-      }
+      const random = list[Math.floor(Math.random() * list.length)];
+      if (!options.find((o) => o.name === random.name)) options.push(random);
     }
     const shuffled = options.sort(() => 0.5 - Math.random());
-
     setQuestion({ correct, options: shuffled });
     setSelectedAnswer(null);
-    setQuestionCount(prev => prev + 1);
-    setTimer(15);
+    setQuestionCount((p) => p + 1);
+    setTimer(QUIZ_TIME);
   };
 
   const handleAnswer = (option) => {
     if (selectedAnswer) return;
-
     setSelectedAnswer(option);
     if (option.name === question.correct.name) {
-      setScore(prev => prev + 1);
+      setScore((p) => p + 1);
+      setOverlay("success");
+    } else {
+      setOverlay("fail");
     }
-
     setTimeout(() => {
-      generateNewQuestion();
-    }, 1000);
+      setOverlay(null);
+      generateQuestion();
+    }, 900);
   };
 
+  const progress = Math.max(0, (timer / QUIZ_TIME) * 100);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 to-blue-200 flex flex-col items-center justify-center px-4 py-10">
-      <div className="flex justify-between items-center w-full max-w-md mb-4">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-800 to-cyan-700">
+      {/* Glowing background blobs */}
+      <motion.div
+        className="absolute w-[500px] h-[500px] bg-gradient-to-br from-cyan-400 to-emerald-400 rounded-full blur-3xl opacity-25 -top-32 -left-40"
+        animate={{ y: [0, 40, 0], x: [0, 20, 0] }}
+        transition={{ duration: 12, repeat: Infinity }}
+      />
+      <motion.div
+        className="absolute w-[400px] h-[400px] bg-gradient-to-tr from-green-400 to-teal-500 rounded-full blur-2xl opacity-20 bottom-[-100px] right-[-100px]"
+        animate={{ y: [0, -30, 0], x: [0, -20, 0] }}
+        transition={{ duration: 10, repeat: Infinity }}
+      />
 
+      {/* Card */}
+      <motion.div
+        className="relative z-10 w-full max-w-md mx-4 p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-2xl"
+        initial={{ opacity: 0, scale: 0.96, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-white/80 hover:text-white transition"
+          >
+            <FaArrowLeft />
+            Home
+          </Link>
+          <div className="flex items-center gap-3">
+            <p className="text-white/80 bg-white/10 px-3 py-1 rounded-full text-xs">
+              Score: <span className="text-white">{score}</span>
+            </p>
+            <p className="text-white/80 bg-white/10 px-3 py-1 rounded-full text-xs">
+              ⏱ {timer}s
+            </p>
+          </div>
+        </div>
 
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-5 flex items-center gap-2">
+          <FaFlag className="text-cyan-300" /> Flag Quiz
+        </h1>
 
-        <Link
-          to="/"
-          className="flex items-center gap-2 text-sm text-purple-700 font-medium hover:underline hover:text-purple-900 transition-colors"
-        >
-          <FaArrowLeft />
-          Home
-        </Link>
+        {/* Flag */}
+        {question?.correct?.flag && (
+          <motion.img
+            src={question.correct.flag}
+            alt="flag"
+            className="w-40 h-28 mx-auto object-contain mb-5 rounded-lg border border-white/10 shadow-lg bg-white/5"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          />
+        )}
 
-        <p className="text-gray-700 font-semibold">⏱️ {timer}s</p>
-      </div>
+        {/* Timer Bar */}
+        <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-5">
+          <motion.div
+            className="h-full bg-gradient-to-r from-emerald-400 to-cyan-300"
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.8 }}
+          />
+        </div>
 
-      <h2 className="text-2xl font-bold text-blue-700 mb-4">🏳️ Flag Quiz</h2>
-      <p className="text-gray-700 mb-6">Score : {score} / {questionCount - 1}</p>
+        {/* Options */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {question?.options.map((option, i) => {
+            const isCorrect = option.name === question.correct.name;
+            const isSelected = selectedAnswer?.name === option.name;
 
-      {question?.correct.flag && (
-        <motion.img
-          src={question.correct.flag}
-          alt="country flag"
-          className="w-32 h-20 object-contain mb-6 shadow-lg border rounded-md"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        />
-      )}
+            let base = "py-3 px-4 rounded-xl font-semibold transition-all text-white border border-white/10";
+            let style = "bg-white/10 hover:bg-white/15 hover:scale-105";
+            if (selectedAnswer) {
+              if (isSelected && isCorrect) style = "bg-emerald-500 text-white shadow-lg";
+              else if (isSelected && !isCorrect) style = "bg-rose-500 text-white";
+              else if (isCorrect) style = "bg-emerald-300 text-slate-900";
+            }
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
-        {question?.options.map((option, index) => {
-          const isCorrect = option.name === question.correct.name;
-          const isSelected = selectedAnswer?.name === option.name;
+            return (
+              <motion.button
+                key={i}
+                onClick={() => handleAnswer(option)}
+                disabled={!!selectedAnswer}
+                className={`${base} ${style}`}
+                whileTap={{ scale: 0.97 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+              >
+                {option.name}
+              </motion.button>
+            );
+          })}
+        </div>
+      </motion.div>
 
-          let bg = 'bg-white';
-          if (selectedAnswer) {
-            if (isSelected && isCorrect) bg = 'bg-green-500 text-white';
-            else if (isSelected && !isCorrect) bg = 'bg-red-400 text-white';
-            else if (isCorrect) bg = 'bg-green-200';
-          }
-
-          return (
-            <motion.button
-              key={index}
-              onClick={() => handleAnswer(option)}
-              disabled={!!selectedAnswer}
-              className={`${bg} py-3 px-4 rounded-xl shadow hover:scale-105 transition-transform`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
+      {/* Overlay */}
+      <AnimatePresence>
+        {overlay && (
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center z-20 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className={`px-8 py-6 rounded-2xl bg-white/20 border border-white/10 backdrop-blur-lg flex items-center gap-3 shadow-2xl ${
+                overlay === "success" ? "text-emerald-400" : "text-rose-400"
+              }`}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.3 }}
             >
-              <FaFlag className="mr-2" />
-              {option.name}
-            </motion.button>
-          );
-        })}
-      </div>
+              {overlay === "success" ? (
+                <>
+                  <FaCheck className="text-3xl" />
+                  <span className="text-white font-semibold text-lg">Correct!</span>
+                </>
+              ) : (
+                <>
+                  <FaTimes className="text-3xl" />
+                  <span className="text-white font-semibold text-lg">Wrong</span>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
-
-export default FlagQuiz;
