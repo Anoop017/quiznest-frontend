@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { FaFilm, FaArrowLeft } from "react-icons/fa";
+import { FaFilm, FaArrowLeft, FaRedo } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { quizAPI } from "../utils/api";
+import { useAuth } from "../contexts/AuthContext";
 
 const quizData = [
   { emojis: '🦁👑', answer: 'The Lion King' },
@@ -129,12 +131,17 @@ const quizData = [
   { emojis: '🦈🌊', answer: 'Shark Week' },
 ];
 
+const QUESTIONS_PER_QUIZ = 10;
+const QUIZ_TIME = 20;
+
 export default function EmojiMovieQuiz() {
+  const { isAuthenticated } = useAuth();
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [score, setScore] = useState(0);
   const [questionCount, setQuestionCount] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [timer, setTimer] = useState(20);
+  const [timer, setTimer] = useState(QUIZ_TIME);
+  const [isComplete, setIsComplete] = useState(false);
 
   // Generate first question
   useEffect(() => {
@@ -154,7 +161,37 @@ export default function EmojiMovieQuiz() {
     return () => clearTimeout(t);
   }, [timer, selectedAnswer, currentQuestion]);
 
+  const completeQuiz = async () => {
+    setIsComplete(true);
+    
+    if (isAuthenticated) {
+      try {
+        await quizAPI.saveAttempt({
+          quizType: 'emoji-movie',
+          score: (score / QUESTIONS_PER_QUIZ) * 100,
+          totalQuestions: QUESTIONS_PER_QUIZ,
+          correctAnswers: score
+        });
+      } catch (error) {
+        console.error('Error saving quiz attempt:', error);
+      }
+    }
+  };
+
+  const handlePlayAgain = () => {
+    setScore(0);
+    setQuestionCount(0);
+    setIsComplete(false);
+    setTimer(QUIZ_TIME);
+    generateNewQuestion();
+  };
+
   const generateNewQuestion = () => {
+    if (questionCount >= QUESTIONS_PER_QUIZ) {
+      completeQuiz();
+      return;
+    }
+
     const shuffled = [...quizData].sort(() => 0.5 - Math.random());
     const correct = shuffled[0];
     const options = [correct.answer];
@@ -168,7 +205,7 @@ export default function EmojiMovieQuiz() {
     setCurrentQuestion({ ...correct, options: finalOptions });
     setSelectedAnswer(null);
     setQuestionCount((prev) => prev + 1);
-    setTimer(20);
+    setTimer(QUIZ_TIME);
   };
 
   const handleAnswer = (answer) => {
@@ -177,6 +214,38 @@ export default function EmojiMovieQuiz() {
     if (answer === currentQuestion.answer) setScore((prev) => prev + 1);
     setTimeout(generateNewQuestion, 1000);
   };
+
+  if (isComplete) {
+    return (
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
+        <motion.div
+          className="relative z-10 w-full max-w-md mx-4 p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-2xl"
+          initial={{ opacity: 0, scale: 0.96, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+        >
+          <h2 className="text-3xl font-bold text-white mb-4">Quiz Complete!</h2>
+          <div className="space-y-4 mb-6">
+            <p className="text-white/90">Final Score: {score} / {QUESTIONS_PER_QUIZ}</p>
+            <p className="text-white/90">Accuracy: {((score / QUESTIONS_PER_QUIZ) * 100).toFixed(1)}%</p>
+          </div>
+          <div className="flex gap-4">
+            <button
+              onClick={handlePlayAgain}
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition"
+            >
+              <FaRedo /> Try Again
+            </button>
+            <Link
+              to="/"
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition"
+            >
+              <FaArrowLeft /> Home
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 text-white">

@@ -1,12 +1,16 @@
 // src/pages/FlagQuiz.jsx
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { FaFlag, FaArrowLeft, FaCheck, FaTimes } from "react-icons/fa";
+import { FaFlag, FaArrowLeft, FaCheck, FaTimes, FaRedo } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import { countriesAPI, quizAPI } from "../utils/api";
+import { useAuth } from "../contexts/AuthContext";
 
 const QUIZ_TIME = 15;
+const QUESTIONS_PER_QUIZ = 10;
 
 export default function FlagQuiz() {
+  const { isAuthenticated } = useAuth();
   const [countries, setCountries] = useState([]);
   const [question, setQuestion] = useState(null);
   const [score, setScore] = useState(0);
@@ -14,13 +18,13 @@ export default function FlagQuiz() {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [timer, setTimer] = useState(QUIZ_TIME);
   const [overlay, setOverlay] = useState(null); // success | fail
+  const [isComplete, setIsComplete] = useState(false);
   const timerRef = useRef(null);
 
   useEffect(() => {
     async function fetchCountries() {
       try {
-        const res = await fetch("https://quiznest-backend.onrender.com/api/countries");
-        const data = await res.json();
+        const data = await countriesAPI.getAll();
         const filtered = data.countries.map(c=>({
           name:c.name,
           flag:c.flag,
@@ -54,6 +58,13 @@ export default function FlagQuiz() {
 
   const generateQuestion = (list = countries) => {
     if (!list || list.length < 4) return;
+    
+    // Check if quiz is complete
+    if (questionCount >= QUESTIONS_PER_QUIZ) {
+      completeQuiz();
+      return;
+    }
+
     const correct = list[Math.floor(Math.random() * list.length)];
     const options = [correct];
     while (options.length < 4) {
@@ -82,7 +93,65 @@ export default function FlagQuiz() {
     }, 900);
   };
 
+  const completeQuiz = async () => {
+    setIsComplete(true);
+    clearInterval(timerRef.current);
+    
+    if (isAuthenticated) {
+      try {
+        await quizAPI.saveAttempt({
+          quizType: 'flag',
+          score: (score / QUESTIONS_PER_QUIZ) * 100,
+          totalQuestions: QUESTIONS_PER_QUIZ,
+          correctAnswers: score
+        });
+      } catch (error) {
+        console.error('Error saving quiz attempt:', error);
+      }
+    }
+  };
+
+  const restartQuiz = () => {
+    setScore(0);
+    setQuestionCount(0);
+    setIsComplete(false);
+    setTimer(QUIZ_TIME);
+    generateQuestion();
+  };
+
   const progress = Math.max(0, (timer / QUIZ_TIME) * 100);
+
+  if (isComplete) {
+    return (
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-800 to-cyan-700">
+        <motion.div
+          className="relative z-10 w-full max-w-md mx-4 p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-2xl"
+          initial={{ opacity: 0, scale: 0.96, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+        >
+          <h2 className="text-3xl font-bold text-white mb-4">Quiz Complete!</h2>
+          <div className="space-y-4 mb-6">
+            <p className="text-white/90">Final Score: {score} / {QUESTIONS_PER_QUIZ}</p>
+            <p className="text-white/90">Accuracy: {((score / QUESTIONS_PER_QUIZ) * 100).toFixed(1)}%</p>
+          </div>
+          <div className="flex gap-4">
+            <button
+              onClick={restartQuiz}
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition"
+            >
+              <FaRedo /> Try Again
+            </button>
+            <Link
+              to="/"
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition"
+            >
+              <FaArrowLeft /> Home
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-800 to-cyan-700">

@@ -1,8 +1,15 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaFlag, FaGlobeAmericas, FaLandmark, FaTheaterMasks, FaArrowRight } from "react-icons/fa";
+import { useAuth } from "../contexts/AuthContext";
+import { useEffect } from "react";
 
 export default function Home() {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // Removed auto-redirect to dashboard as we want to show quizzes to all users
+
   const quizCards = [
     {
       to: "/flag-quiz",

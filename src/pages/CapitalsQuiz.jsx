@@ -1,12 +1,16 @@
 // src/pages/CapitalsQuiz.jsx
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { FaLandmark, FaArrowLeft, FaCheck, FaTimes } from "react-icons/fa";
+import { FaLandmark, FaArrowLeft, FaCheck, FaTimes, FaRedo } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import { countriesAPI, quizAPI } from "../utils/api";
+import { useAuth } from "../contexts/AuthContext";
 
 const QUIZ_TIME = 15;
+const QUESTIONS_PER_QUIZ = 10;
 
 export default function CapitalsQuiz() {
+  const { isAuthenticated } = useAuth();
   const [countries, setCountries] = useState([]);
   const [question, setQuestion] = useState(null);
   const [score, setScore] = useState(0);
@@ -14,14 +18,14 @@ export default function CapitalsQuiz() {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [timer, setTimer] = useState(QUIZ_TIME);
   const [showResultOverlay, setShowResultOverlay] = useState(null); // 'success' | 'fail' | null
+  const [isComplete, setIsComplete] = useState(false);
   const timerRef = useRef(null);
 
   // Load countries from backend
   useEffect(() => {
     async function fetchCountries() {
       try {
-        const res = await fetch("https://quiznest-backend.onrender.com/api/countries");
-        const data = await res.json();
+        const data = await countriesAPI.getAll();
         const list = data.countries || data;
         // keep full objects (name, capital, flag, region, etc)
         const filtered = list.filter((c) => c.capital && c.capital.length > 0 && c.flag);
@@ -56,6 +60,13 @@ export default function CapitalsQuiz() {
   // generate question
   const generateNewQuestion = (countryList = countries) => {
     if (!countryList || countryList.length < 4) return;
+
+    // Check if quiz is complete
+    if (questionCount >= QUESTIONS_PER_QUIZ) {
+      completeQuiz();
+      return;
+    }
+
     const correct = countryList[Math.floor(Math.random() * countryList.length)];
     const options = [correct];
     // pick 3 unique randoms
@@ -90,9 +101,28 @@ export default function CapitalsQuiz() {
     }, 900);
   };
 
+  const completeQuiz = async () => {
+    setIsComplete(true);
+    clearInterval(timerRef.current);
+    
+    if (isAuthenticated) {
+      try {
+        await quizAPI.saveAttempt({
+          quizType: 'capitals',
+          score: (score / QUESTIONS_PER_QUIZ) * 100,
+          totalQuestions: QUESTIONS_PER_QUIZ,
+          correctAnswers: score
+        });
+      } catch (error) {
+        console.error('Error saving quiz attempt:', error);
+      }
+    }
+  };
+
   const handlePlayAgain = () => {
     setScore(0);
     setQuestionCount(0);
+    setIsComplete(false);
     generateNewQuestion();
   };
 
