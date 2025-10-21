@@ -10,6 +10,7 @@ import {
   FaBrain,
 } from "react-icons/fa";
 import { useAuth } from "../contexts/AuthContext";
+import LaserFlow from '../components/LaserFlow';
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
@@ -82,7 +83,7 @@ export default function Home() {
         className="relative z-10 w-full max-w-5xl"
       >
         {/* Hero Section */}
-        <div className="text-center mb-12 sm:mb-16">
+        <div className="text-center mb-12 sm:mb-16 relative z-20">
           <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 mb-6">
             <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent">
               Q
@@ -99,155 +100,175 @@ export default function Home() {
         </div>
 
         {/* Featured AI Quiz Card - Premium Version */}
-        <div className="flex justify-center mb-10 sm:mb-16">
+        <div className="flex justify-center mb-10 sm:mb-16 relative">
           {quizCards
             .filter((card) => card.featured)
             .map((card, index) => (
-              <Link
-                key={index}
-                to={card.to}
-                className="block group w-full sm:w-11/12 lg:w-4/5 max-w-2xl"
-              >
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                  whileHover={{
-                    y: -6,
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  className="relative"
-                >
-                  {/* Subtle outer glow */}
-                  <div
-                    className="absolute -inset-0.5 rounded-3xl opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-700"
-                    style={{
-                      background: "linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(139, 92, 246, 0.3))",
-                    }}
-                  />
+              <div key={index} className="relative w-full sm:w-11/12 lg:w-4/5 max-w-2xl">
+                {/* LaserFlow Effect - Positioned to fall from top to center of card */}
+                <div className="absolute inset-x-0 -top-40 sm:-top-48 md:-top-56 bottom-0 flex justify-center pointer-events-none z-10 overflow-visible">
+                  <div className="w-full max-w-[600px] h-full">
+                    <LaserFlow
+                      className="w-full h-full"
+                      color="#ec4899"
+                      wispDensity={1.5}
+                      flowSpeed={0.45}
+                      verticalSizing={3.0}
+                      horizontalSizing={0.4}
+                      fogIntensity={0.6}
+                      wispSpeed={10}
+                      wispIntensity={5}
+                      verticalBeamOffset={-0.15}
+                      horizontalBeamOffset={0.0}
+                    />
+                  </div>
+                </div>
 
-                  {/* Main card container */}
-                  <div className="relative p-8 sm:p-10 rounded-3xl backdrop-blur-xl border border-white/10 overflow-hidden bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 group-hover:border-white/20 transition-all duration-500">
-                    
-                    {/* Subtle animated gradient orb */}
-                    <motion.div
-                      className="absolute w-96 h-96 rounded-full blur-3xl opacity-20"
+                <Link
+                  to={card.to}
+                  className="block group relative z-20"
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    whileHover={{
+                      y: -6,
+                    }}
+                    whileTap={{ scale: 0.98 }}
+                    className="relative"
+                  >
+                    {/* Subtle outer glow */}
+                    <div
+                      className="absolute -inset-0.5 rounded-3xl opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-700"
                       style={{
-                        background: "radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, rgba(139, 92, 246, 0.3) 50%, transparent 70%)",
-                        top: "-40%",
-                        right: "-20%",
-                      }}
-                      animate={{
-                        scale: [1, 1.1, 1],
-                        opacity: [0.2, 0.3, 0.2],
-                      }}
-                      transition={{
-                        duration: 8,
-                        repeat: Infinity,
-                        ease: "easeInOut",
+                        background: "linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(139, 92, 246, 0.3))",
                       }}
                     />
 
-                    {/* Content */}
-                    <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
-                      {/* Icon container */}
+                    {/* Main card container */}
+                    <div className="relative p-8 sm:p-10 rounded-3xl backdrop-blur-xl border border-white/10 overflow-hidden bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 group-hover:border-white/20 transition-all duration-500">
+                      
+                      {/* Subtle animated gradient orb */}
                       <motion.div
-                        className="flex-shrink-0"
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ type: "spring", stiffness: 300 }}
-                      >
-                        <div className="relative">
-                          <motion.div
-                            className="absolute inset-0 rounded-2xl bg-gradient-to-br from-pink-500/30 via-purple-500/30 to-indigo-500/30 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                          />
-                          <div className="relative p-5 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20 shadow-lg">
-                            {card.icon}
-                          </div>
-                        </div>
-                      </motion.div>
-
-                      {/* Text content */}
-                      <div className="flex-1 text-center sm:text-left">
-                        {/* Badge */}
-                        <motion.div
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.2 }}
-                          className="inline-flex mb-3 px-3 py-1 rounded-full bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-indigo-500/10 border border-white/10 backdrop-blur-sm"
-                        >
-                          <span className="text-xs font-semibold bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300 bg-clip-text text-transparent">
-                            AI POWERED
-                          </span>
-                        </motion.div>
-
-                        {/* Title */}
-                        <motion.h3
-                          className="text-2xl sm:text-3xl font-bold mb-2 tracking-tight text-white"
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.3 }}
-                        >
-                          {card.label}
-                        </motion.h3>
-
-                        {/* Description */}
-                        <motion.p
-                          className="text-sm sm:text-base text-slate-400 mb-4"
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.4 }}
-                        >
-                          {card.description}
-                        </motion.p>
-
-                        {/* Feature tags */}
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.5 }}
-                          className="flex flex-wrap gap-2 justify-center sm:justify-start"
-                        >
-                          {["Instant", "Smart", "Unlimited"].map((tag, i) => (
-                            <span
-                              key={tag}
-                              className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-slate-400 backdrop-blur-sm"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </motion.div>
-                      </div>
-
-                      {/* CTA Arrow */}
-                      <motion.div
-                        className="flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity duration-300"
-                        animate={{ x: [0, 4, 0] }}
+                        className="absolute w-96 h-96 rounded-full blur-3xl opacity-20"
+                        style={{
+                          background: "radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, rgba(139, 92, 246, 0.3) 50%, transparent 70%)",
+                          top: "-40%",
+                          right: "-20%",
+                        }}
+                        animate={{
+                          scale: [1, 1.1, 1],
+                          opacity: [0.2, 0.3, 0.2],
+                        }}
                         transition={{
-                          duration: 2,
+                          duration: 8,
                           repeat: Infinity,
                           ease: "easeInOut",
                         }}
-                      >
-                        <FaArrowRight className="text-2xl text-white" />
-                      </motion.div>
-                    </div>
+                      />
 
-                    {/* Subtle shine effect on hover */}
-                    <motion.div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none"
-                      style={{
-                        background: "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%)",
-                      }}
-                      initial={{ x: "-100%" }}
-                      whileHover={{ x: "100%" }}
-                      transition={{
-                        duration: 1.5,
-                        ease: "easeInOut",
-                      }}
-                    />
-                  </div>
-                </motion.div>
-              </Link>
+                      {/* Content */}
+                      <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
+                        {/* Icon container */}
+                        <motion.div
+                          className="flex-shrink-0"
+                          whileHover={{ scale: 1.05 }}
+                          transition={{ type: "spring", stiffness: 300 }}
+                        >
+                          <div className="relative">
+                            <motion.div
+                              className="absolute inset-0 rounded-2xl bg-gradient-to-br from-pink-500/30 via-purple-500/30 to-indigo-500/30 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                            />
+                            <div className="relative p-5 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20 shadow-lg">
+                              {card.icon}
+                            </div>
+                          </div>
+                        </motion.div>
+
+                        {/* Text content */}
+                        <div className="flex-1 text-center sm:text-left">
+                          {/* Badge */}
+                          <motion.div
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="inline-flex mb-3 px-3 py-1 rounded-full bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-indigo-500/10 border border-white/10 backdrop-blur-sm"
+                          >
+                            <span className="text-xs font-semibold bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300 bg-clip-text text-transparent">
+                              AI POWERED
+                            </span>
+                          </motion.div>
+
+                          {/* Title */}
+                          <motion.h3
+                            className="text-2xl sm:text-3xl font-bold mb-2 tracking-tight text-white"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 }}
+                          >
+                            {card.label}
+                          </motion.h3>
+
+                          {/* Description */}
+                          <motion.p
+                            className="text-sm sm:text-base text-slate-400 mb-4"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.4 }}
+                          >
+                            {card.description}
+                          </motion.p>
+
+                          {/* Feature tags */}
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.5 }}
+                            className="flex flex-wrap gap-2 justify-center sm:justify-start"
+                          >
+                            {["Instant", "Smart", "Unlimited"].map((tag, i) => (
+                              <span
+                                key={tag}
+                                className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-slate-400 backdrop-blur-sm"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </motion.div>
+                        </div>
+
+                        {/* CTA Arrow */}
+                        <motion.div
+                          className="flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity duration-300"
+                          animate={{ x: [0, 4, 0] }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
+                        >
+                          <FaArrowRight className="text-2xl text-white" />
+                        </motion.div>
+                      </div>
+
+                      {/* Subtle shine effect on hover */}
+                      <motion.div
+                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none"
+                        style={{
+                          background: "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%)",
+                        }}
+                        initial={{ x: "-100%" }}
+                        whileHover={{ x: "100%" }}
+                        transition={{
+                          duration: 1.5,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    </div>
+                  </motion.div>
+                </Link>
+              </div>
             ))}
         </div>
 
