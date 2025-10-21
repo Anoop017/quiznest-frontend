@@ -98,8 +98,7 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Featured AI Quiz Card */}
-        {/* Featured AI Quiz Generator with Aurora Glow */}
+        {/* Featured AI Quiz Card - Premium Version */}
         <div className="flex justify-center mb-10 sm:mb-16">
           {quizCards
             .filter((card) => card.featured)
@@ -107,82 +106,150 @@ export default function Home() {
               <Link
                 key={index}
                 to={card.to}
-                className="block group w-full sm:w-3/4 lg:w-2/3"
+                className="block group w-full sm:w-11/12 lg:w-4/5 max-w-2xl"
               >
                 <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: "easeOut" }}
                   whileHover={{
-                    scale: 1.06,
-                    y: -12,
-                    rotateX: 5,
-                    rotateY: 5,
-                    boxShadow: "0 0 60px rgba(255,255,255,0.4)",
+                    y: -6,
                   }}
-                  whileTap={{ scale: 0.97 }}
-                  className={`relative p-10 sm:p-12 rounded-3xl backdrop-blur-2xl border border-transparent transition-all duration-700 overflow-hidden
-    bg-gradient-to-br ${card.gradient} before:absolute before:inset-0 before:rounded-3xl 
-    before:bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.2),transparent_60%)] 
-    before:opacity-70 before:blur-3xl
-  `}
+                  whileTap={{ scale: 0.98 }}
+                  className="relative"
                 >
-                  {/* Animated neon border ring */}
-                  <motion.div
-                    className="absolute inset-0 rounded-3xl border-[1.5px] border-transparent"
+                  {/* Subtle outer glow */}
+                  <div
+                    className="absolute -inset-0.5 rounded-3xl opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-700"
                     style={{
-                      background:
-                        "linear-gradient(120deg, rgba(255,255,255,0.6), rgba(255,255,255,0.1), rgba(255,255,255,0.6)) border-box",
-                      WebkitMask:
-                        "linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)",
-                      WebkitMaskComposite: "xor",
-                      maskComposite: "exclude",
-                    }}
-                    animate={{
-                      rotate: [0, 360],
-                    }}
-                    transition={{
-                      duration: 8,
-                      repeat: Infinity,
-                      ease: "linear",
+                      background: "linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(139, 92, 246, 0.3))",
                     }}
                   />
 
-                  {/* Animated glowing orb inside */}
-                  <motion.div
-                    className="absolute w-64 h-64 rounded-full blur-3xl opacity-30 bg-gradient-to-br from-red-500 via-orange-500 to-yellow-400"
-                    animate={{
-                      x: [-60, 60, -60],
-                      y: [0, 40, 0],
-                      scale: [1, 1.1, 1],
-                    }}
-                    transition={{
-                      duration: 8,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                    style={{ top: "-50%", left: "-20%" }}
-                  />
+                  {/* Main card container */}
+                  <div className="relative p-8 sm:p-10 rounded-3xl backdrop-blur-xl border border-white/10 overflow-hidden bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 group-hover:border-white/20 transition-all duration-500">
+                    
+                    {/* Subtle animated gradient orb */}
+                    <motion.div
+                      className="absolute w-96 h-96 rounded-full blur-3xl opacity-20"
+                      style={{
+                        background: "radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, rgba(139, 92, 246, 0.3) 50%, transparent 70%)",
+                        top: "-40%",
+                        right: "-20%",
+                      }}
+                      animate={{
+                        scale: [1, 1.1, 1],
+                        opacity: [0.2, 0.3, 0.2],
+                      }}
+                      transition={{
+                        duration: 8,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    />
 
-                  {/* Glass overlay for contrast */}
-                  <div className="absolute inset-0 bg-white/[0.05] rounded-3xl mix-blend-overlay" />
+                    {/* Content */}
+                    <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
+                      {/* Icon container */}
+                      <motion.div
+                        className="flex-shrink-0"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <div className="relative">
+                          <motion.div
+                            className="absolute inset-0 rounded-2xl bg-gradient-to-br from-pink-500/30 via-purple-500/30 to-indigo-500/30 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                          />
+                          <div className="relative p-5 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20 shadow-lg">
+                            {card.icon}
+                          </div>
+                        </div>
+                      </motion.div>
 
-                  {/* Content */}
-                  <div className="relative z-10 flex flex-col items-center text-center">
-                    <div className="p-5 rounded-2xl bg-white/10 group-hover:bg-white/20 transition-colors duration-300 mb-4 shadow-inner backdrop-blur-xl">
-                      {card.icon}
+                      {/* Text content */}
+                      <div className="flex-1 text-center sm:text-left">
+                        {/* Badge */}
+                        <motion.div
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="inline-flex mb-3 px-3 py-1 rounded-full bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-indigo-500/10 border border-white/10 backdrop-blur-sm"
+                        >
+                          <span className="text-xs font-semibold bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300 bg-clip-text text-transparent">
+                            AI POWERED
+                          </span>
+                        </motion.div>
+
+                        {/* Title */}
+                        <motion.h3
+                          className="text-2xl sm:text-3xl font-bold mb-2 tracking-tight text-white"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.3 }}
+                        >
+                          {card.label}
+                        </motion.h3>
+
+                        {/* Description */}
+                        <motion.p
+                          className="text-sm sm:text-base text-slate-400 mb-4"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.4 }}
+                        >
+                          {card.description}
+                        </motion.p>
+
+                        {/* Feature tags */}
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.5 }}
+                          className="flex flex-wrap gap-2 justify-center sm:justify-start"
+                        >
+                          {["Instant", "Smart", "Unlimited"].map((tag, i) => (
+                            <span
+                              key={tag}
+                              className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-slate-400 backdrop-blur-sm"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </motion.div>
+                      </div>
+
+                      {/* CTA Arrow */}
+                      <motion.div
+                        className="flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity duration-300"
+                        animate={{ x: [0, 4, 0] }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        <FaArrowRight className="text-2xl text-white" />
+                      </motion.div>
                     </div>
-                    <h3 className="text-3xl font-semibold mb-2 text-white tracking-wide drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
-                      {card.label}
-                    </h3>
-                    <p className="text-lg text-slate-300 group-hover:text-slate-100 transition-colors">
-                      {card.description}
-                    </p>
+
+                    {/* Subtle shine effect on hover */}
+                    <motion.div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none"
+                      style={{
+                        background: "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%)",
+                      }}
+                      initial={{ x: "-100%" }}
+                      whileHover={{ x: "100%" }}
+                      transition={{
+                        duration: 1.5,
+                        ease: "easeInOut",
+                      }}
+                    />
                   </div>
                 </motion.div>
-
-
               </Link>
             ))}
         </div>
-
 
         {/* Remaining Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-4xl mx-auto px-4 sm:px-0">

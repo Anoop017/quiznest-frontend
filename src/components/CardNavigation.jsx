@@ -47,7 +47,7 @@ const CardNavigation = () => {
     gsap.set(cardsRef.current, { y: 40, opacity: 0, scale: 0.95 });
 
     const tl = gsap.timeline({ paused: true });
-    tl.to(navEl, { height: 280, duration: 0.5, ease });
+    tl.to(navEl, { height: 60, duration: 0.5, ease, overflow: "visible" });
     tl.to(
       cardsRef.current,
       {
@@ -92,10 +92,10 @@ const CardNavigation = () => {
 
   return (
     <>
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-[900px]">
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-[900px] max-h-screen overflow-visible">
         <nav
           ref={navRef}
-          className="relative h-[60px] mt-4 rounded-2xl overflow-hidden backdrop-blur-2xl bg-gradient-to-br from-slate-900/80 to-slate-800/60 border border-white/10 shadow-xl"
+          className="relative h-[60px] mt-4 rounded-2xl backdrop-blur-2xl bg-gradient-to-br from-slate-900/80 to-slate-800/60 border border-white/10 shadow-xl"
         >
           {/* Top Bar */}
           <div className="flex items-center justify-between h-[60px] px-4">
@@ -120,11 +120,11 @@ const CardNavigation = () => {
               {isExpanded ? "Close" : "Menu"}
             </button>
 
-            {/* Right side: Login/Signup or User Info */}
-            <div className="flex items-center gap-3">
+            {/* Right side: Login/Signup or User Info - Hidden on small screens */}
+            <div className="hidden sm:flex items-center gap-3">
               {isAuthenticated ? (
                 <>
-                  <span className="text-slate-300 text-sm font-medium hidden sm:inline">
+                  <span className="text-slate-300 text-sm font-medium">
                     {user?.email}
                   </span>
                   <button
@@ -157,7 +157,7 @@ const CardNavigation = () => {
 
           {/* Expanded Content */}
           <div
-            className={`absolute left-0 right-0 top-[60px] p-3 flex flex-col md:flex-row gap-3 transition-all duration-500 ${
+            className={`absolute left-0 right-0 top-[60px] p-3 pb-4 flex flex-col md:flex-row gap-3 transition-all duration-500 rounded-b-2xl backdrop-blur-2xl bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-x border-b border-white/10 max-h-[calc(100vh-120px)] md:max-h-none overflow-y-auto md:overflow-visible ${
               isExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           >
@@ -184,6 +184,46 @@ const CardNavigation = () => {
                 </div>
               </div>
             ))}
+
+            {/* Auth Card - Only visible on small screens */}
+            <div
+              ref={setCardRef(menuItems.length)}
+              className="sm:hidden flex-1 rounded-xl backdrop-blur-lg border border-white/10 bg-gradient-to-br from-white/5 to-white/0 p-4 text-white shadow-inner hover:shadow-lg hover:border-white/20 transition-all duration-300"
+            >
+              <h3 className="text-lg font-semibold mb-3 text-white/90">
+                {isAuthenticated ? "Account" : "Get Started"}
+              </h3>
+              {isAuthenticated ? (
+                <div className="flex flex-col gap-3">
+                  <div className="text-slate-300 text-sm">
+                    {user?.email}
+                  </div>
+                  <button
+                    onClick={logout}
+                    className="w-full relative overflow-hidden px-4 py-2 rounded-xl text-sm font-semibold text-white border border-red-400/50 bg-gradient-to-r from-red-500 to-pink-600 shadow-lg hover:shadow-red-500/50 hover:scale-105 transition-all duration-300"
+                  >
+                    <span className="relative z-10">Logout</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => handleAuthClick("login")}
+                    className="w-full relative overflow-hidden px-4 py-2 rounded-xl text-sm font-semibold text-white border border-white/20 bg-white/10 backdrop-blur-md hover:bg-white/20 hover:scale-105 transition-all duration-300"
+                  >
+                    <span className="relative z-10">Login</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/30 to-purple-500/30 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                  </button>
+
+                  <button
+                    onClick={() => handleAuthClick("signup")}
+                    className="w-full relative overflow-hidden px-4 py-2 rounded-xl text-sm font-semibold text-white border border-purple-500/50 bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg hover:shadow-pink-500/50 hover:scale-105 transition-all duration-300"
+                  >
+                    <span className="relative z-10">Sign Up</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </nav>
       </div>
