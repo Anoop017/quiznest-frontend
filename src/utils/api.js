@@ -1,7 +1,11 @@
-const API_BASE_URL = 'https://quiznest-backend.onrender.com/api';
+// --- CHANGED ---
+// Use the new environment variable, fallback to your Render URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE || 'https://quiznest-backend.onrender.com';
 
 export const apiRequest = async (endpoint, options = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`;
+  // --- CHANGED ---
+  // The base URL no longer includes '/api', so we add it here.
+  const url = `${API_BASE_URL}/api${endpoint}`;
   const token = localStorage.getItem('token');
 
   const config = {
@@ -54,4 +58,13 @@ export const quizAPI = {
   getAttempts: () => apiRequest('/quiz/attempts'),
   
   getStats: () => apiRequest('/quiz/stats'),
+};
+
+// --- ADDED ---
+// AI Quiz API call
+export const aiAPI = {
+  generateQuiz: (topic) => apiRequest('/ai/generate-quiz', {
+    method: 'POST',
+    body: JSON.stringify({ topic }),
+  }),
 };
