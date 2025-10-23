@@ -107,14 +107,14 @@ export default function Home() {
                     <LaserFlow
                       className="w-full h-full"
                       color="#ec4899"
-                      wispDensity={1.5}
-                      flowSpeed={0.45}
-                      verticalSizing={3.0}
-                      horizontalSizing={0.4}
-                      fogIntensity={0.6}
-                      wispSpeed={10}
-                      wispIntensity={5}
-                      verticalBeamOffset={-0.15}
+                      wispDensity={0.7}
+                      flowSpeed={0.5}
+                      verticalSizing={40}
+                      horizontalSizing={20}
+                      fogIntensity={0}
+                      wispSpeed={60}
+                      wispIntensity={500}
+                      verticalBeamOffset={-0.01}
                       horizontalBeamOffset={0.0}
                     />
                   </div>
