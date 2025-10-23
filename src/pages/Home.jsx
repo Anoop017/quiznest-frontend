@@ -20,7 +20,13 @@ export default function Home() {
       to: "/ai-quiz",
       label: "AI Quiz Generator",
       description: "Create a quiz on any topic instantly with AI",
-      icon: <FaBrain className="text-3xl sm:text-4xl" />,
+      icon: (
+        <img
+          src="/artificial-intelligence.png"
+          alt="AI Icon"
+          className="w-8 sm:w-10 h-8 sm:h-10 object-contain"
+        />
+      ),
       gradient: "from-pink-500/20 via-rose-500/20 to-orange-400/20",
       hoverGradient: "from-pink-500/30 via-rose-500/30 to-orange-400/30",
       featured: true,
@@ -84,28 +90,18 @@ export default function Home() {
       >
         {/* Hero Section */}
         <div className="text-center mb-12 sm:mb-16 relative z-20">
-          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 mb-6">
-            <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent">
-              Q
-            </span>
+          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/10 mb-20">
+            <FaBrain className="text-4xl sm:text-5xl text-white/70" />
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-3 sm:mb-4">
-            <span className="bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">
-              QuizNest
-            </span>
-          </h1>
-          <p className="text-slate-400 text-base sm:text-lg max-w-md mx-auto leading-relaxed px-4">
-            Challenge yourself with engaging quizzes. Learn, compete, and have fun.
-          </p>
         </div>
 
-        {/* Featured AI Quiz Card - Premium Version */}
+        {/* Featured AI Quiz Card */}
         <div className="flex justify-center mb-10 sm:mb-16 relative">
           {quizCards
             .filter((card) => card.featured)
             .map((card, index) => (
               <div key={index} className="relative w-full sm:w-11/12 lg:w-4/5 max-w-2xl">
-                {/* LaserFlow Effect - Positioned to fall from top to center of card */}
+                {/* LaserFlow Effect */}
                 <div className="absolute inset-x-0 -top-40 sm:-top-48 md:-top-56 bottom-0 flex justify-center pointer-events-none z-10 overflow-visible">
                   <div className="w-full max-w-[600px] h-full">
                     <LaserFlow
@@ -124,17 +120,12 @@ export default function Home() {
                   </div>
                 </div>
 
-                <Link
-                  to={card.to}
-                  className="block group relative z-20"
-                >
+                <Link to={card.to} className="block group relative z-20">
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: "easeOut" }}
-                    whileHover={{
-                      y: -6,
-                    }}
+                    whileHover={{ y: -6 }}
                     whileTap={{ scale: 0.98 }}
                     className="relative"
                   >
@@ -142,18 +133,19 @@ export default function Home() {
                     <div
                       className="absolute -inset-0.5 rounded-3xl opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-700"
                       style={{
-                        background: "linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(139, 92, 246, 0.3))",
+                        background:
+                          "linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(139, 92, 246, 0.3))",
                       }}
                     />
 
                     {/* Main card container */}
                     <div className="relative p-8 sm:p-10 rounded-3xl backdrop-blur-xl border border-white/10 overflow-hidden bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 group-hover:border-white/20 transition-all duration-500">
-                      
                       {/* Subtle animated gradient orb */}
                       <motion.div
                         className="absolute w-96 h-96 rounded-full blur-3xl opacity-20"
                         style={{
-                          background: "radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, rgba(139, 92, 246, 0.3) 50%, transparent 70%)",
+                          background:
+                            "radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, rgba(139, 92, 246, 0.3) 50%, transparent 70%)",
                           top: "-40%",
                           right: "-20%",
                         }}
@@ -188,7 +180,6 @@ export default function Home() {
 
                         {/* Text content */}
                         <div className="flex-1 text-center sm:text-left">
-                          {/* Badge */}
                           <motion.div
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -200,7 +191,6 @@ export default function Home() {
                             </span>
                           </motion.div>
 
-                          {/* Title */}
                           <motion.h3
                             className="text-2xl sm:text-3xl font-bold mb-2 tracking-tight text-white"
                             initial={{ opacity: 0, x: -10 }}
@@ -210,7 +200,6 @@ export default function Home() {
                             {card.label}
                           </motion.h3>
 
-                          {/* Description */}
                           <motion.p
                             className="text-sm sm:text-base text-slate-400 mb-4"
                             initial={{ opacity: 0, x: -10 }}
@@ -220,14 +209,13 @@ export default function Home() {
                             {card.description}
                           </motion.p>
 
-                          {/* Feature tags */}
                           <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.5 }}
                             className="flex flex-wrap gap-2 justify-center sm:justify-start"
                           >
-                            {["Instant", "Smart", "Unlimited"].map((tag, i) => (
+                            {["Instant", "Smart", "Unlimited"].map((tag) => (
                               <span
                                 key={tag}
                                 className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-slate-400 backdrop-blur-sm"
@@ -251,20 +239,6 @@ export default function Home() {
                           <FaArrowRight className="text-2xl text-white" />
                         </motion.div>
                       </div>
-
-                      {/* Subtle shine effect on hover */}
-                      <motion.div
-                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none"
-                        style={{
-                          background: "linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%)",
-                        }}
-                        initial={{ x: "-100%" }}
-                        whileHover={{ x: "100%" }}
-                        transition={{
-                          duration: 1.5,
-                          ease: "easeInOut",
-                        }}
-                      />
                     </div>
                   </motion.div>
                 </Link>
