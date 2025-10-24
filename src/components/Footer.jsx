@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaGithub, FaLinkedin, FaInstagram, FaTwitter, FaInfoCircle, FaBrain, FaHeart } from 'react-icons/fa';
+import { FaGithub, FaLinkedin, FaInstagram, FaTwitter, FaBrain } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
 const socialLinks = [
@@ -38,7 +38,6 @@ const quickLinks = [
   { label: 'AI Quiz', path: '/ai-quiz' },
   { label: 'Flag Quiz', path: '/flag-quiz' },
   { label: 'Capital Quiz', path: '/quiz/capitals' },
-  { label: 'About', path: '/about' },
 ];
 
 export default function Footer() {
@@ -120,16 +119,6 @@ export default function Footer() {
             <p className="text-slate-400 text-sm leading-relaxed text-center md:text-left">
               Empowering minds through AI-powered quizzes. Learn, compete, and grow with every question.
             </p>
-            <div className="flex items-center gap-2 mt-4 text-slate-400 text-xs">
-              <span>Made with</span>
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                <FaHeart className="text-pink-500" />
-              </motion.div>
-              <span>by developers</span>
-            </div>
           </motion.div>
 
           {/* Quick Links */}
@@ -192,41 +181,18 @@ export default function Footer() {
                   whileHover={{ scale: 1.1, y: -4 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  {/* Icon background */}
                   <div className="relative w-12 h-12 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center overflow-hidden group-hover:border-white/20 transition-all duration-300">
-                    {/* Gradient overlay on hover */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${social.color} opacity-0 group-hover:opacity-20 transition-opacity duration-300`} />
-                    
-                    {/* Icon */}
                     <span className={`relative z-10 text-slate-400 ${social.hoverColor} transition-colors duration-300`}>
                       {social.icon}
                     </span>
                   </div>
-
-                  {/* Tooltip */}
                   <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white text-slate-900 text-xs font-medium rounded-lg px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap shadow-lg">
                     {social.name}
                   </span>
                 </motion.a>
               ))}
             </div>
-
-            {/* Newsletter or CTA */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
-              className="mt-6 w-full"
-            >
-              <Link
-                to="/about"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white font-medium text-sm shadow-lg hover:shadow-purple-500/50 transition-all duration-300 group"
-              >
-                <FaInfoCircle className="group-hover:rotate-12 transition-transform duration-300" />
-                Learn More About Us
-              </Link>
-            </motion.div>
           </motion.div>
         </div>
 
@@ -250,7 +216,6 @@ export default function Footer() {
                 Anoop S Nair
               </a>
             </p>
-            
             <div className="flex items-center gap-6 text-xs">
               <span className="text-slate-500">Built with React, Vite & Tailwind CSS</span>
             </div>
