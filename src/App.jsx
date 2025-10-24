@@ -7,7 +7,6 @@ import FlagQuiz from "./pages/FlagQuiz";
 import CapitalsQuiz from "./pages/CapitalsQuiz";
 import GeographyQuiz from "./pages/GeographyQuiz";
 import EmojiMovieQuiz from "./pages/EmojiMovieQuiz";
-import About from "./pages/About";
 import Footer from "./components/Footer";
 import AIQuiz from "./pages/AIQuiz";
 
@@ -24,7 +23,6 @@ function App() {
             <Route path="/quiz/capitals" element={<CapitalsQuiz />} />
             <Route path="/quiz/geography" element={<GeographyQuiz />} />
             <Route path="/quiz/emoji-movie" element={<EmojiMovieQuiz />} />
-            <Route path="/about" element={<About />} />
             <Route path="/ai-quiz" element={<AIQuiz />} />
           </Routes>
         </div>
