@@ -164,9 +164,11 @@ export default function CapitalsQuiz() {
               <strong className="font-semibold text-white">{score}</strong>{" "}
               <span className="text-slate-300">/ {Math.max(0, questionCount - 1)}</span>
             </div>
-            <div className="text-xs text-white/80 bg-white/6 px-3 py-1 rounded-full">
-              ⏱️ {timer}s
-            </div>
+            {!isComplete && (
+              <div className="text-xs text-white/80 bg-white/6 px-3 py-1 rounded-full">
+                ⏱️ {timer}s
+              </div>
+            )}
           </div>
         </div>
 
@@ -175,87 +177,138 @@ export default function CapitalsQuiz() {
           Capitals Quiz
         </h1>
 
-        {/* Question card */}
-        <div className="bg-white/6 rounded-2xl p-4 mb-4 border border-white/8">
-          <div className="flex items-center gap-3">
-            {/* Flag */}
-            <div className="w-20 h-12 rounded-md overflow-hidden flex-shrink-0 bg-white/10 border border-white/6">
-              {question?.correct?.flag ? (
-                <img
-                  src={question.correct.flag}
-                  alt={`${question.correct.name} flag`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-xs text-white/60">
-                  No flag
+        {/* Question card - Only show when quiz is not complete */}
+        {!isComplete && (
+          <>
+            <div className="bg-white/6 rounded-2xl p-4 mb-4 border border-white/8">
+              <div className="flex items-center gap-3">
+                {/* Flag */}
+                <div className="w-20 h-12 rounded-md overflow-hidden flex-shrink-0 bg-white/10 border border-white/6">
+                  {question?.correct?.flag ? (
+                    <img
+                      src={question.correct.flag}
+                      alt={`${question.correct.name} flag`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-white/60">
+                      No flag
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            <div>
-              <p className="text-sm text-white/80">Which country has the capital</p>
-              <div className="text-lg sm:text-xl font-semibold text-white">
-                {question ? question.correct.capital : "Loading..."}
+                <div>
+                  <p className="text-sm text-white/80">Which country has the capital</p>
+                  <div className="text-lg sm:text-xl font-semibold text-white">
+                    {question ? question.correct.capital : "Loading..."}
+                  </div>
+                </div>
+              </div>
+
+              {/* animated progress bar */}
+              <div className="mt-4 h-2 bg-white/8 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-emerald-400 via-lime-300 to-amber-300"
+                  initial={{ width: "100%" }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.8 }}
+                />
               </div>
             </div>
-          </div>
 
-          {/* animated progress bar */}
-          <div className="mt-4 h-2 bg-white/8 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-emerald-400 via-lime-300 to-amber-300"
-              initial={{ width: "100%" }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.8 }}
-            />
-          </div>
-        </div>
+            {/* Options grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {question?.options?.map((option, i) => {
+                const isCorrect = option.capital === question.correct.capital;
+                const isSelected = selectedAnswer?.capital === option.capital;
 
-        {/* Options grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {question?.options?.map((option, i) => {
-            const isCorrect = option.capital === question.correct.capital;
-            const isSelected = selectedAnswer?.capital === option.capital;
+                // compute classes
+                let base = "py-3 px-4 rounded-xl text-sm font-semibold flex items-center gap-3 justify-center transition-all";
+                let color = "bg-white/8 text-white/90 hover:bg-white/12";
+                if (selectedAnswer) {
+                  if (isSelected && isCorrect) color = "bg-emerald-500 text-white shadow-lg";
+                  else if (isSelected && !isCorrect) color = "bg-rose-500 text-white shadow-lg";
+                  else if (isCorrect) color = "bg-emerald-300 text-white/900";
+                }
 
-            // compute classes
-            let base = "py-3 px-4 rounded-xl text-sm font-semibold flex items-center gap-3 justify-center transition-all";
-            let color = "bg-white/8 text-white/90 hover:bg-white/12";
-            if (selectedAnswer) {
-              if (isSelected && isCorrect) color = "bg-emerald-500 text-white shadow-lg";
-              else if (isSelected && !isCorrect) color = "bg-rose-500 text-white shadow-lg";
-              else if (isCorrect) color = "bg-emerald-300 text-white/900";
-            }
-
-            return (
-              <motion.button
-                key={i}
-                onClick={() => handleAnswer(option)}
-                disabled={!!selectedAnswer}
-                className={`${base} ${color} border border-white/6`}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: i * 0.08 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <FaLandmark className="opacity-90" />
-                <span>{option.name}</span>
-              </motion.button>
-            );
-          })}
-        </div>
+                return (
+                  <motion.button
+                    key={i}
+                    onClick={() => handleAnswer(option)}
+                    disabled={!!selectedAnswer}
+                    className={`${base} ${color} border border-white/6`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: i * 0.08 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <FaLandmark className="opacity-90" />
+                    <span>{option.name}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </>
+        )}
 
         {/* controls */}
-        <div className="mt-5 flex items-center justify-between gap-3">
-          <button
-            onClick={handlePlayAgain}
-            className="text-sm px-4 py-2 rounded-full bg-white/8 text-white/90 hover:bg-white/12 transition"
-          >
-            Play Again
-          </button>
+        {!isComplete && (
+          <div className="mt-5 flex items-center justify-between gap-3">
+            <button
+              onClick={handlePlayAgain}
+              className="text-sm px-4 py-2 rounded-full bg-white/8 text-white/90 hover:bg-white/12 transition"
+            >
+              Play Again
+            </button>
 
-          <div className="text-xs text-white/70">Questions: {questionCount}</div>
-        </div>
+            <div className="text-xs text-white/70">Questions: {questionCount} / {QUESTIONS_PER_QUIZ}</div>
+          </div>
+        )}
+
+        {/* Quiz Complete - Results Screen */}
+        {isComplete && (
+          <motion.div
+            className="mt-6 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="bg-white/6 rounded-2xl p-6 mb-4 border border-white/8">
+              <h2 className="text-2xl font-bold text-white mb-3">Quiz Complete!</h2>
+              <div className="text-5xl font-bold text-emerald-400 mb-2">
+                {score} / {QUESTIONS_PER_QUIZ}
+              </div>
+              <p className="text-white/80 text-lg mb-4">
+                You got {Math.round((score / QUESTIONS_PER_QUIZ) * 100)}% correct!
+              </p>
+              <div className="h-2 bg-white/8 rounded-full overflow-hidden mb-4">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-emerald-400 to-lime-300"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(score / QUESTIONS_PER_QUIZ) * 100}%` }}
+                  transition={{ duration: 1, delay: 0.2 }}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={handlePlayAgain}
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition-all duration-200 hover:scale-105"
+              >
+                <FaRedo className="text-sm" />
+                <span>Play Again</span>
+              </button>
+              <Link
+                to="/"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/10 transition-all duration-200 hover:scale-105"
+              >
+                <FaArrowLeft className="text-sm" />
+                <span>Back to Home</span>
+              </Link>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
 
       {/* result overlay (success/fail) */}

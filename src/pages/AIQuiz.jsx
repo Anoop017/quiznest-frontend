@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { aiAPI } from "../utils/api";
-import { topics } from "../utils/topics"; // --- IMPORT THE TOPICS ---
+import { topics } from "../utils/topics";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaBrain,
@@ -12,21 +12,20 @@ import {
   FaExclamationTriangle,
   FaRedo,
   FaArrowRight,
-  FaDice, // --- ADDED FOR RANDOM BUTTON ---
+  FaDice,
   FaArrowLeft,
 } from "react-icons/fa";
 
-// (Animation variants remain the same)
 const cardVariants = {
-  initial: { opacity: 0, y: 30, scale: 0.98 },
+  initial: { opacity: 0, y: 20, scale: 0.98 },
   animate: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, y: -30, scale: 0.98 },
+  exit: { opacity: 0, y: -20, scale: 0.98 },
 };
 
 const questionVariants = {
-  initial: { opacity: 0, x: -50 },
+  initial: { opacity: 0, x: -30 },
   animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: 50 },
+  exit: { opacity: 0, x: 30 },
 };
 
 export default function AIQuiz() {
@@ -41,7 +40,6 @@ export default function AIQuiz() {
   const [isComplete, setIsComplete] = useState(false);
 
   const resetQuiz = () => {
-    // No topic reset, user might want to re-generate
     setQuiz([]);
     setCurrentQuestion(0);
     setLoading(false);
@@ -51,14 +49,13 @@ export default function AIQuiz() {
     setSelectedOption(null);
     setIsComplete(false);
   };
-  
-  // --- REFACTORED to accept a topic argument ---
+
   const handleGenerateQuiz = async (topicToGenerate) => {
-    if (!topicToGenerate) {
+    if (!topicToGenerate || topicToGenerate.trim() === "") {
       setError("Please enter or select a topic.");
       return;
     }
-    // Set loading and clear old state
+    
     setLoading(true);
     setError(null);
     setQuiz([]);
@@ -106,29 +103,25 @@ export default function AIQuiz() {
     }
   };
 
-  // --- NEW: Handles the 'Enter' key press via <form> ---
   const handleSubmit = (e) => {
     e.preventDefault();
     handleGenerateQuiz(topic);
   };
 
-  // --- NEW: Handles the random button click ---
   const handleRandomQuiz = () => {
     const randomTopic = topics[Math.floor(Math.random() * topics.length)];
-    setTopic(randomTopic); // Update the input field
+    setTopic(randomTopic);
     handleGenerateQuiz(randomTopic);
   };
 
-  // --- NEW: Handles the dropdown selection ---
   const handleDropdownChange = (e) => {
     const selectedTopic = e.target.value;
     if (selectedTopic) {
-      setTopic(selectedTopic); // Update the input field
+      setTopic(selectedTopic);
       handleGenerateQuiz(selectedTopic);
     }
   };
-  
-  // (handleAnswerClick, getButtonClass, and progress remain the same)
+
   const handleAnswerClick = (option) => {
     if (isAnswered) return;
     setIsAnswered(true);
@@ -150,23 +143,22 @@ export default function AIQuiz() {
   };
 
   const getButtonClass = (option) => {
-    const base =
-      "w-full p-4 rounded-lg border text-left transition-all duration-300 flex items-center justify-between group disabled:opacity-100";
-    if (!isAnswered) {
-      return `${base} bg-slate-800 border-slate-700 hover:bg-slate-700 hover:border-blue-500`;
-    }
+    const base = "w-full p-4 rounded-xl border text-left transition-all duration-300 flex items-center justify-between disabled:opacity-100";
     
-    // This check was missing in the button render, but it's correct here.
+    if (!isAnswered) {
+      return `${base} bg-white/8 border-white/10 hover:bg-white/12 hover:border-white/20 text-white`;
+    }
+
     const isCorrect = option === quiz[currentQuestion].correctAnswer;
     const isSelected = option === selectedOption;
 
     if (isCorrect) {
-      return `${base} bg-emerald-600/30 border-emerald-500 text-white`;
+      return `${base} bg-emerald-500/20 border-emerald-400 text-white shadow-lg`;
     }
     if (isSelected && !isCorrect) {
-      return `${base} bg-red-600/30 border-red-500 text-white`;
+      return `${base} bg-rose-500/20 border-rose-400 text-white shadow-lg`;
     }
-    return `${base} bg-slate-800/50 border-slate-700/50 opacity-60`;
+    return `${base} bg-white/5 border-white/10 opacity-50 text-white`;
   };
 
   const progress = isComplete
@@ -174,8 +166,7 @@ export default function AIQuiz() {
     : quiz.length > 0
     ? ((currentQuestion + 1) / quiz.length) * 100
     : 0;
-  
-  // --- Updated JSX for Input State ---
+
   const renderInputState = () => (
     <motion.div
       key="input"
@@ -183,98 +174,104 @@ export default function AIQuiz() {
       initial="initial"
       animate="animate"
       exit="exit"
+      transition={{ duration: 0.5 }}
     >
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-3">
         <FaBrain className="text-3xl text-blue-400" />
-        <h1 className="text-3xl font-bold text-white">AI Quiz Generator</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">AI Quiz Generator</h1>
       </div>
-      <p className="text-slate-300 mb-6">
-        Type a topic, select a preset, or try a random one!
+      <p className="text-white/70 mb-6 text-sm sm:text-base">
+        Enter a topic, select from presets, or try a random quiz!
       </p>
-      
-      {/* --- NEW: <form> handles 'Enter' key --- */}
-      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-        <input
-          value={topic}
-          onChange={(e) => {
-            setTopic(e.target.value);
-            if (error) setError(null);
-          }}
-          className="flex-grow p-3 rounded-lg bg-slate-800 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white"
-          placeholder="e.g., 'The Roman Empire', 'React.js Hooks'"
-        />
-        <button
-          type="submit" // Important for the form
-          disabled={loading}
-          className="flex-shrink-0 flex items-center justify-center gap-2 p-3 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors disabled:opacity-50"
-        >
-          Generate <FaArrowRight />
-        </button>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            value={topic}
+            onChange={(e) => {
+              setTopic(e.target.value);
+              if (error) setError(null);
+            }}
+            className="flex-grow p-3 rounded-xl bg-white/8 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-white placeholder-white/50"
+            placeholder="e.g., 'Ancient Egypt', 'JavaScript ES6'"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-shrink-0 flex items-center justify-center gap-2 p-3 px-6 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-all duration-200 disabled:opacity-50 hover:scale-105"
+          >
+            Generate <FaArrowRight className="text-sm" />
+          </button>
+        </div>
+
+        <div className="relative flex items-center">
+          <div className="flex-grow border-t border-white/10"></div>
+          <span className="flex-shrink mx-4 text-white/50 text-xs uppercase tracking-wide">or</span>
+          <div className="flex-grow border-t border-white/10"></div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <select
+            onChange={handleDropdownChange}
+            value=""
+            className="p-3 rounded-xl bg-white/8 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-white appearance-none cursor-pointer"
+          >
+            <option value="">Select a preset topic...</option>
+            {topics.map((t, idx) => (
+              <option key={idx} value={t} className="bg-slate-800">
+                {t}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            onClick={handleRandomQuiz}
+            disabled={loading}
+            className="flex items-center justify-center gap-2 p-3 rounded-xl bg-white/8 hover:bg-white/12 text-white font-semibold transition-all duration-200 disabled:opacity-50 border border-white/10 hover:scale-105"
+          >
+            <FaDice /> Random Topic
+          </button>
+        </div>
       </form>
-
-      {/* --- NEW: Divider --- */}
-      <div className="relative flex items-center my-4">
-        <div className="flex-grow border-t border-slate-700"></div>
-        <span className="flex-shrink mx-4 text-slate-400 text-sm">OR</span>
-        <div className="flex-grow border-t border-slate-700"></div>
-      </div>
-
-      {/* --- NEW: Dropdown and Random Button --- */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <select
-          onChange={handleDropdownChange}
-          value={topic} // This syncs the dropdown with the text input
-          className="p-3 rounded-lg bg-slate-800 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white"
-        >
-          <option value="">Select a preset topic...</option>
-          {topics.map((t, idx) => (
-            <option key={idx} value={t}>{t}</option>
-          ))}
-        </select>
-        
-        <button
-          onClick={handleRandomQuiz}
-          disabled={loading}
-          className="flex items-center justify-center gap-2 p-3 rounded-lg bg-slate-700 hover:bg-slate-600 text-white font-semibold transition-colors disabled:opacity-50"
-        >
-          <FaDice /> Random Topic
-        </button>
-      </div>
     </motion.div>
   );
 
-  // --- The rest of the component ---
   return (
-    <div className="relative flex items-center justify-center min-h-screen p-4 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
-      {/* (Background elements are the same) */}
+    <div className="relative flex items-center justify-center min-h-screen p-4 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* Animated background blobs */}
       <motion.div
-        className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl"
-        animate={{ x: [0, 100, 0], y: [0, 50, 0], scale: [1, 1.2, 1] }}
-        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute -left-32 -top-32 w-[520px] h-[520px] rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 opacity-20 blur-3xl mix-blend-screen"
+        animate={{ x: [0, 60, 0], y: [0, 30, 0], rotate: [0, 10, 0] }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"
-        animate={{ x: [0, -50, 0], y: [0, -80, 0], scale: [1, 1.1, 1] }}
-        transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute right-[-120px] bottom-[-120px] w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 opacity-15 blur-2xl mix-blend-screen"
+        animate={{ x: [0, -40, 0], y: [0, -20, 0], rotate: [0, -8, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
 
       {/* Back Button */}
       <div className="absolute top-4 left-4 z-20">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/80 text-white rounded-lg backdrop-blur-sm border border-white/10 transition-all duration-200 hover:scale-105"
+          className="inline-flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-sm border border-white/10 transition-all duration-200 hover:scale-105"
         >
           <FaArrowLeft className="text-sm" />
           <span className="text-sm font-medium">Back to Home</span>
         </Link>
       </div>
 
-      {/* Main Animated Card */}
+      {/* Main Card */}
       <motion.div
         layout
-        className="relative z-10 w-full max-w-2xl p-6 sm:p-8 bg-slate-900/70 backdrop-blur-md border border-slate-700 rounded-2xl shadow-2xl overflow-hidden"
+        className="relative z-10 w-full max-w-2xl p-6 sm:p-8 bg-white/10 backdrop-blur-lg border border-white/10 rounded-3xl shadow-2xl"
+        initial={{ opacity: 0, y: 30, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6 }}
       >
         <AnimatePresence mode="wait">
+          {/* Loading State */}
           {loading && (
             <motion.div
               key="loading"
@@ -282,16 +279,17 @@ export default function AIQuiz() {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="flex flex-col items-center justify-center h-64 gap-4"
+              className="flex flex-col items-center justify-center py-20 gap-4"
             >
               <FaSpinner className="animate-spin text-5xl text-blue-400" />
-              <h2 className="text-2xl font-semibold text-slate-200">
+              <h2 className="text-xl sm:text-2xl font-semibold text-white">
                 Generating your quiz...
               </h2>
-              <p className="text-slate-400">Please wait a moment.</p>
+              <p className="text-white/60 text-sm">This may take a few moments</p>
             </motion.div>
           )}
 
+          {/* Error State */}
           {!loading && error && (
             <motion.div
               key="error"
@@ -299,24 +297,23 @@ export default function AIQuiz() {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="flex flex-col items-center justify-center h-64 gap-4 text-center"
+              className="flex flex-col items-center justify-center py-20 gap-4 text-center"
             >
-              <FaExclamationTriangle className="text-5xl text-red-400" />
-              <h2 className="text-2xl font-semibold text-slate-200">
-                An Error Occurred
+              <FaExclamationTriangle className="text-5xl text-rose-400" />
+              <h2 className="text-xl sm:text-2xl font-semibold text-white">
+                Oops! Something went wrong
               </h2>
-              <p className="text-slate-400">{error}</p>
+              <p className="text-white/70 text-sm max-w-md">{error}</p>
               <button
-                onClick={() => {
-                  setError(null); // Just clear error, don't reset topic
-                }}
-                className="mt-4 flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-semibold"
+                onClick={() => setError(null)}
+                className="mt-4 flex items-center gap-2 px-5 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 transition-all font-semibold text-white hover:scale-105"
               >
                 <FaRedo /> Try Again
               </button>
             </motion.div>
           )}
 
+          {/* Complete State */}
           {!loading && !error && isComplete && (
             <motion.div
               key="complete"
@@ -324,24 +321,38 @@ export default function AIQuiz() {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="flex flex-col items-center justify-center min-h-[300px] gap-4 text-center"
+              className="flex flex-col items-center justify-center py-16 gap-6 text-center"
             >
-              <h2 className="text-4xl font-bold text-white">Quiz Complete!</h2>
-              <p className="text-2xl text-slate-300">
-                You scored{" "}
-                <span className="font-bold text-blue-400">
+              <div className="bg-white/6 rounded-2xl p-8 border border-white/10 w-full">
+                <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                  Quiz Complete! 🎉
+                </h2>
+                <div className="text-6xl font-bold text-blue-400 mb-3">
                   {score} / {quiz.length}
-                </span>
-              </p>
+                </div>
+                <p className="text-white/80 text-lg mb-4">
+                  You got {Math.round((score / quiz.length) * 100)}% correct!
+                </p>
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-blue-400 to-indigo-400"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(score / quiz.length) * 100}%` }}
+                    transition={{ duration: 1, delay: 0.2 }}
+                  />
+                </div>
+              </div>
+
               <button
-                onClick={resetQuiz} // Resets everything *except* topic
-                className="mt-4 flex items-center gap-2 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-semibold"
+                onClick={resetQuiz}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 transition-all font-semibold text-white hover:scale-105"
               >
                 <FaRedo /> Create Another Quiz
               </button>
             </motion.div>
           )}
 
+          {/* Quiz State */}
           {!loading && !error && !isComplete && quiz.length > 0 && (
             <motion.div
               key="quiz"
@@ -350,53 +361,52 @@ export default function AIQuiz() {
               animate="animate"
               exit="exit"
             >
-              {/* Header: Score and Question Count */}
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
-                <h1 className="text-2xl font-bold text-white truncate">
-                  {topic} Quiz
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-6">
+                <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
+                  {topic}
                 </h1>
-                <div className="flex-shrink-0 text-sm text-slate-300 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
-                  Question{" "}
-                  <span className="font-bold text-white">
-                    {currentQuestion + 1}
-                  </span>
-                  /{quiz.length}
+                <div className="flex items-center gap-3">
+                  <div className="text-xs text-white/80 bg-white/10 px-3 py-1 rounded-full border border-white/10">
+                    Score: <span className="font-semibold text-white">{score}</span>
+                  </div>
+                  <div className="text-xs text-white/80 bg-white/10 px-3 py-1 rounded-full border border-white/10">
+                    <span className="font-semibold text-white">{currentQuestion + 1}</span> / {quiz.length}
+                  </div>
                 </div>
               </div>
 
               {/* Progress Bar */}
-              <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700 mb-6">
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mb-6 border border-white/10">
                 <motion.div
-                  className="h-full bg-blue-500"
+                  className="h-full bg-gradient-to-r from-blue-400 to-indigo-400"
                   initial={{ width: "0%" }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.5, ease: "easeInOut" }}
                 />
               </div>
 
-              {/* Animated Question Text */}
-              <AnimatePresence mode="out-in">
-                <motion.h2
-                  key={currentQuestion}
-                  variants={questionVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
-                  transition={{ duration: 0.3 }}
-                  className="text-xl sm:text-2xl font-semibold mb-6 min-h-[6rem] sm:min-h-[4rem]" // Adjusted min-height for mobile
-                >
-                  {quiz[currentQuestion].question}
-                </motion.h2>
-              </AnimatePresence>
+              {/* Question */}
+              <div className="bg-white/6 rounded-2xl p-5 mb-6 border border-white/10 min-h-[120px] flex items-center">
+                <AnimatePresence mode="wait">
+                  <motion.h2
+                    key={currentQuestion}
+                    variants={questionVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={{ duration: 0.3 }}
+                    className="text-lg sm:text-xl font-semibold text-white leading-relaxed"
+                  >
+                    {quiz[currentQuestion].question}
+                  </motion.h2>
+                </AnimatePresence>
+              </div>
 
-              {/* Options Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Options */}
+              <div className="grid grid-cols-1 gap-3">
                 {quiz[currentQuestion].options.map((option, idx) => {
-                  
-                  // --- THIS IS THE FIX ---
-                  // This variable was missing from the render scope.
                   const isCorrect = option === quiz[currentQuestion].correctAnswer;
-                  // --- END OF FIX ---
 
                   return (
                     <motion.button
@@ -404,13 +414,19 @@ export default function AIQuiz() {
                       onClick={() => handleAnswerClick(option)}
                       disabled={isAnswered}
                       className={getButtonClass(option)}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
                       whileHover={!isAnswered ? { scale: 1.02 } : {}}
                       whileTap={!isAnswered ? { scale: 0.98 } : {}}
                     >
-                      <span className="flex-1">{option}</span>
-                      {/* This code will now work */}
-                      {isAnswered && isCorrect && <FaCheck className="text-emerald-500" />}
-                      {isAnswered && !isCorrect && selectedOption === option && <FaTimes className="text-red-500" />}
+                      <span className="flex-1 text-sm sm:text-base">{option}</span>
+                      {isAnswered && isCorrect && (
+                        <FaCheck className="text-emerald-400 text-lg flex-shrink-0" />
+                      )}
+                      {isAnswered && !isCorrect && selectedOption === option && (
+                        <FaTimes className="text-rose-400 text-lg flex-shrink-0" />
+                      )}
                     </motion.button>
                   );
                 })}
@@ -418,10 +434,8 @@ export default function AIQuiz() {
             </motion.div>
           )}
 
-          {/* --- This is the new entry point --- */}
-          {!loading && !error && !isComplete && quiz.length === 0 &&
-            renderInputState()
-          }
+          {/* Input State */}
+          {!loading && !error && !isComplete && quiz.length === 0 && renderInputState()}
         </AnimatePresence>
       </motion.div>
     </div>

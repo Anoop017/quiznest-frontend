@@ -28,7 +28,6 @@ const Navigation = () => {
     { name: 'Capital Quiz', path: '/quiz/capitals' },
     { name: 'Geography Quiz', path: '/quiz/geography' },
     { name: 'Emoji Movie Quiz', path: '/quiz/emoji-movie' },
-    { name: 'About', path: '/about' },
   ];
 
   return (
