@@ -21,11 +21,17 @@ export const apiRequest = async (endpoint, options = {}) => {
     const data = await response.json();
 
     if (!response.ok) {
+      if (response.status === 403 || response.status === 401) {
+        // Token is invalid or expired
+        localStorage.removeItem('token'); // Clear the invalid token
+        window.location.href = '/'; // Redirect to home/login page
+      }
       throw new Error(data.message || 'Something went wrong');
     }
 
     return data;
   } catch (error) {
+    console.error('API Request Error:', error);
     throw error;
   }
 };
