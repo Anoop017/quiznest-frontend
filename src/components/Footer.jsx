@@ -164,7 +164,7 @@ export default function Footer() {
             className="flex flex-col items-center md:items-start"
           >
             <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-pink-300 to-purple-300 bg-clip-text text-transparent">
-              Connect With Us
+              Connect With Me
             </h3>
             <div className="flex gap-4">
               {socialLinks.map((social, index) => (

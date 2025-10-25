@@ -17,9 +17,13 @@ export default function FlagQuiz() {
   const [questionCount, setQuestionCount] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [timer, setTimer] = useState(QUIZ_TIME);
-  const [showResultOverlay, setShowResultOverlay] = useState(null); // 'success' | 'fail' | null
+  const [showResultOverlay, setShowResultOverlay] = useState(null);
   const [isComplete, setIsComplete] = useState(false);
   const timerRef = useRef(null);
+  
+  // Track quiz start time and total time spent
+  const quizStartTimeRef = useRef(null);
+  const [totalTimeSpent, setTotalTimeSpent] = useState(0);
 
   useEffect(() => {
     async function fetchCountries() {
@@ -34,7 +38,11 @@ export default function FlagQuiz() {
           }));
 
         setCountries(filtered);
-        if (filtered.length > 0) generateQuestion(filtered);
+        if (filtered.length > 0) {
+          generateQuestion(filtered);
+          // Start tracking time when quiz begins
+          quizStartTimeRef.current = Date.now();
+        }
       } catch (err) {
         console.error("Failed to fetch countries:", err);
       }
@@ -102,6 +110,12 @@ export default function FlagQuiz() {
     setIsComplete(true);
     clearInterval(timerRef.current);
 
+    // Calculate total time spent in minutes
+    const timeSpentInMinutes = quizStartTimeRef.current 
+      ? Math.round((Date.now() - quizStartTimeRef.current) / 60000) 
+      : 0;
+    setTotalTimeSpent(timeSpentInMinutes);
+
     if (isAuthenticated) {
       try {
         await quizAPI.saveAttempt({
@@ -109,7 +123,9 @@ export default function FlagQuiz() {
           score: (score / QUESTIONS_PER_QUIZ) * 100,
           totalQuestions: QUESTIONS_PER_QUIZ,
           correctAnswers: score,
+          timeSpent: Math.max(1, timeSpentInMinutes) // Ensure at least 1 minute
         });
+        console.log('Quiz attempt saved successfully');
       } catch (error) {
         console.error("Error saving quiz attempt:", error);
       }
@@ -120,6 +136,8 @@ export default function FlagQuiz() {
     setScore(0);
     setQuestionCount(0);
     setIsComplete(false);
+    setTotalTimeSpent(0);
+    quizStartTimeRef.current = Date.now(); // Reset start time
     generateQuestion();
   };
 
@@ -283,6 +301,11 @@ export default function FlagQuiz() {
                   transition={{ duration: 1, delay: 0.2 }}
                 />
               </div>
+              {totalTimeSpent > 0 && (
+                <p className="text-white/60 text-sm">
+                  Time spent: {totalTimeSpent} minute{totalTimeSpent !== 1 ? 's' : ''}
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">

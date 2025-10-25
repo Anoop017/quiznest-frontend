@@ -17,9 +17,13 @@ export default function CapitalsQuiz() {
   const [questionCount, setQuestionCount] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [timer, setTimer] = useState(QUIZ_TIME);
-  const [showResultOverlay, setShowResultOverlay] = useState(null); // 'success' | 'fail' | null
+  const [showResultOverlay, setShowResultOverlay] = useState(null);
   const [isComplete, setIsComplete] = useState(false);
   const timerRef = useRef(null);
+  
+  // Track quiz start time and total time spent
+  const quizStartTimeRef = useRef(null);
+  const [totalTimeSpent, setTotalTimeSpent] = useState(0);
 
   // Load countries from backend
   useEffect(() => {
@@ -27,16 +31,18 @@ export default function CapitalsQuiz() {
       try {
         const data = await countriesAPI.getAll();
         const list = data.countries || data;
-        // keep full objects (name, capital, flag, region, etc)
         const filtered = list.filter((c) => c.capital && c.capital.length > 0 && c.flag);
         setCountries(filtered);
-        if (filtered.length > 0) generateNewQuestion(filtered);
+        if (filtered.length > 0) {
+          generateNewQuestion(filtered);
+          // Start tracking time when quiz begins
+          quizStartTimeRef.current = Date.now();
+        }
       } catch (err) {
         console.error("Failed to fetch countries:", err);
       }
     }
     fetchCountries();
-    // cleanup if unmounted
     return () => clearInterval(timerRef.current);
   }, []);
 
@@ -44,7 +50,6 @@ export default function CapitalsQuiz() {
   useEffect(() => {
     if (!question || selectedAnswer) return;
     if (timer === 0) {
-      // mark wrong and show animation (timeout)
       setSelectedAnswer({ capital: "__timeout__" });
       setShowResultOverlay("fail");
       setTimeout(() => {
@@ -61,7 +66,6 @@ export default function CapitalsQuiz() {
   const generateNewQuestion = (countryList = countries) => {
     if (!countryList || countryList.length < 4) return;
 
-    // Check if quiz is complete
     if (questionCount >= QUESTIONS_PER_QUIZ) {
       completeQuiz();
       return;
@@ -69,7 +73,6 @@ export default function CapitalsQuiz() {
 
     const correct = countryList[Math.floor(Math.random() * countryList.length)];
     const options = [correct];
-    // pick 3 unique randoms
     while (options.length < 4) {
       const random = countryList[Math.floor(Math.random() * countryList.length)];
       if (!options.find((c) => c.capital === random.capital)) options.push(random);
@@ -94,7 +97,6 @@ export default function CapitalsQuiz() {
       setShowResultOverlay("fail");
     }
 
-    // show result briefly then next
     setTimeout(() => {
       setShowResultOverlay(null);
       generateNewQuestion();
@@ -105,14 +107,22 @@ export default function CapitalsQuiz() {
     setIsComplete(true);
     clearInterval(timerRef.current);
     
+    // Calculate total time spent in minutes
+    const timeSpentInMinutes = quizStartTimeRef.current 
+      ? Math.round((Date.now() - quizStartTimeRef.current) / 60000) 
+      : 0;
+    setTotalTimeSpent(timeSpentInMinutes);
+
     if (isAuthenticated) {
       try {
         await quizAPI.saveAttempt({
           quizType: 'capitals',
           score: (score / QUESTIONS_PER_QUIZ) * 100,
           totalQuestions: QUESTIONS_PER_QUIZ,
-          correctAnswers: score
+          correctAnswers: score,
+          timeSpent: Math.max(1, timeSpentInMinutes) // Ensure at least 1 minute
         });
+        console.log('Quiz attempt saved successfully');
       } catch (error) {
         console.error('Error saving quiz attempt:', error);
       }
@@ -123,10 +133,11 @@ export default function CapitalsQuiz() {
     setScore(0);
     setQuestionCount(0);
     setIsComplete(false);
+    setTotalTimeSpent(0);
+    quizStartTimeRef.current = Date.now(); // Reset start time
     generateNewQuestion();
   };
 
-  // progress for bar
   const progress = Math.max(0, (timer / QUIZ_TIME) * 100);
 
   return (
@@ -151,7 +162,7 @@ export default function CapitalsQuiz() {
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         {/* Top row: nav + timer chip */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <Link
             to="/"
             className="inline-flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-sm border border-white/10 transition-all duration-200 hover:scale-105"
@@ -222,7 +233,6 @@ export default function CapitalsQuiz() {
                 const isCorrect = option.capital === question.correct.capital;
                 const isSelected = selectedAnswer?.capital === option.capital;
 
-                // compute classes
                 let base = "py-3 px-4 rounded-xl text-sm font-semibold flex items-center gap-3 justify-center transition-all";
                 let color = "bg-white/8 text-white/90 hover:bg-white/12";
                 if (selectedAnswer) {
@@ -253,7 +263,7 @@ export default function CapitalsQuiz() {
 
         {/* controls */}
         {!isComplete && (
-          <div className="mt-5 flex items-center justify-between gap-3">
+          <div className="mt-5 flex items-center justify-between gap-3 flex-wrap">
             <button
               onClick={handlePlayAgain}
               className="text-sm px-4 py-2 rounded-full bg-white/8 text-white/90 hover:bg-white/12 transition"
@@ -289,19 +299,24 @@ export default function CapitalsQuiz() {
                   transition={{ duration: 1, delay: 0.2 }}
                 />
               </div>
+              {totalTimeSpent > 0 && (
+                <p className="text-white/60 text-sm">
+                  Time spent: {totalTimeSpent} minute{totalTimeSpent !== 1 ? 's' : ''}
+                </p>
+              )}
             </div>
 
-            <div className="flex gap-3 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={handlePlayAgain}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition-all duration-200 hover:scale-105"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition-all duration-200 hover:scale-105 justify-center"
               >
                 <FaRedo className="text-sm" />
                 <span>Play Again</span>
               </button>
               <Link
                 to="/"
-                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/10 transition-all duration-200 hover:scale-105"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold border border-white/10 transition-all duration-200 hover:scale-105 justify-center"
               >
                 <FaArrowLeft className="text-sm" />
                 <span>Back to Home</span>
@@ -328,14 +343,6 @@ export default function CapitalsQuiz() {
             >
               <FaCheck className="text-emerald-400 text-2xl" />
               <div className="text-white font-semibold">Correct!</div>
-
-              {/* little particle dots */}
-              <motion.div
-                className="absolute"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: [0, 1, 0] }}
-                transition={{ duration: 0.9 }}
-              />
             </motion.div>
           </motion.div>
         )}
