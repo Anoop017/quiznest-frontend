@@ -27,11 +27,12 @@ export default function Dashboard() {
     wrongAnswers: 0,
     totalTimeSpent: 0,
     highestScore: 0,
+    lastUpdated: null,
     quizStats: {
-      flagQuiz: { attempted: 0, correct: 0, timeSpent: 0 },
-      capitalQuiz: { attempted: 0, correct: 0, timeSpent: 0 },
-      geographyQuiz: { attempted: 0, correct: 0, timeSpent: 0 },
-      emojiMovieQuiz: { attempted: 0, correct: 0, timeSpent: 0 }
+      flagQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 },
+      capitalQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 },
+      geographyQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 },
+      emojiMovieQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 }
     }
   });
   const [loading, setLoading] = useState(false);
@@ -48,14 +49,15 @@ export default function Dashboard() {
 
       // Process the quiz statistics
       const quizStats = {
-        flagQuiz: { attempted: 0, correct: 0, timeSpent: 0 },
-        capitalQuiz: { attempted: 0, correct: 0, timeSpent: 0 },
-        geographyQuiz: { attempted: 0, correct: 0, timeSpent: 0 },
-        emojiMovieQuiz: { attempted: 0, correct: 0, timeSpent: 0 }
+        flagQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 },
+        capitalQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 },
+        geographyQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 },
+        emojiMovieQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 }
       };
 
       let totalCorrectAnswers = 0;
       let totalQuestions = 0;
+      let totalTimeSpent = 0;
 
       statsData.forEach(stat => {
         const quizKey = {
@@ -69,10 +71,13 @@ export default function Dashboard() {
           quizStats[quizKey] = {
             attempted: stat.totalAttempts,
             correct: stat.totalCorrectAnswers,
-            timeSpent: stat.totalAttempts * 5 // Assuming average 5 minutes per quiz
+            timeSpent: stat.totalTimeSpent,
+            recentAttempts: stat.recentAttempts || [],
+            accuracy: stat.accuracy
           };
           totalCorrectAnswers += stat.totalCorrectAnswers;
           totalQuestions += stat.totalQuestions;
+          totalTimeSpent += stat.totalTimeSpent;
         }
       });
 
@@ -84,8 +89,9 @@ export default function Dashboard() {
         totalQuestions,
         correctAnswers: totalCorrectAnswers,
         wrongAnswers: totalQuestions - totalCorrectAnswers,
-        totalTimeSpent: totalQuizzes * 5, // Assuming average 5 minutes per quiz
+        totalTimeSpent,
         highestScore,
+        lastUpdated: new Date(),
         quizStats
       });
     } catch (error) {
@@ -95,6 +101,34 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
+
+  // Refresh stats periodically
+  useEffect(() => {
+    if (user) {
+      // Initial fetch
+      fetchQuizStats();
+      
+      // Set up periodic refresh every 30 seconds
+      const refreshInterval = setInterval(fetchQuizStats, 30000);
+      
+      // Cleanup
+      return () => clearInterval(refreshInterval);
+    }
+  }, [user]);
+
+  // Additional effect to refresh stats when component gains focus
+  useEffect(() => {
+    if (user) {
+      const handleFocus = () => {
+        fetchQuizStats();
+      };
+
+      window.addEventListener('focus', handleFocus);
+      
+      // Cleanup
+      return () => window.removeEventListener('focus', handleFocus);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (user) {
