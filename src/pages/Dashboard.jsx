@@ -12,7 +12,8 @@ import {
   FaGlobeAmericas,
   FaTheaterMasks,
   FaArrowRight,
-  FaEdit
+  FaEdit,
+  FaSync
 } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { quizAPI } from '../utils/api';
@@ -33,65 +34,95 @@ export default function Dashboard() {
       emojiMovieQuiz: { attempted: 0, correct: 0, timeSpent: 0 }
     }
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchQuizStats = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [statsData, attemptsData] = await Promise.all([
+        quizAPI.getStats(),
+        quizAPI.getAttempts()
+      ]);
+
+      // Process the quiz statistics
+      const quizStats = {
+        flagQuiz: { attempted: 0, correct: 0, timeSpent: 0 },
+        capitalQuiz: { attempted: 0, correct: 0, timeSpent: 0 },
+        geographyQuiz: { attempted: 0, correct: 0, timeSpent: 0 },
+        emojiMovieQuiz: { attempted: 0, correct: 0, timeSpent: 0 }
+      };
+
+      let totalCorrectAnswers = 0;
+      let totalQuestions = 0;
+
+      statsData.forEach(stat => {
+        const quizKey = {
+          'flag': 'flagQuiz',
+          'capitals': 'capitalQuiz',
+          'geography': 'geographyQuiz',
+          'emoji-movie': 'emojiMovieQuiz'
+        }[stat.quizType];
+
+        if (quizKey) {
+          quizStats[quizKey] = {
+            attempted: stat.totalAttempts,
+            correct: stat.totalCorrectAnswers,
+            timeSpent: stat.totalAttempts * 5 // Assuming average 5 minutes per quiz
+          };
+          totalCorrectAnswers += stat.totalCorrectAnswers;
+          totalQuestions += stat.totalQuestions;
+        }
+      });
+
+      const totalQuizzes = attemptsData.length;
+      const highestScore = Math.max(...statsData.map(s => s.highestScore), 0);
+
+      setStats({
+        totalQuizzes,
+        totalQuestions,
+        correctAnswers: totalCorrectAnswers,
+        wrongAnswers: totalQuestions - totalCorrectAnswers,
+        totalTimeSpent: totalQuizzes * 5, // Assuming average 5 minutes per quiz
+        highestScore,
+        quizStats
+      });
+    } catch (error) {
+      console.error('Error fetching quiz statistics:', error);
+      setError('Failed to load dashboard data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchQuizStats = async () => {
-      try {
-        const [statsData, attemptsData] = await Promise.all([
-          quizAPI.getStats(),
-          quizAPI.getAttempts()
-        ]);
-
-        // Process the quiz statistics
-        const quizStats = {
-          flagQuiz: { attempted: 0, correct: 0, timeSpent: 0 },
-          capitalQuiz: { attempted: 0, correct: 0, timeSpent: 0 },
-          geographyQuiz: { attempted: 0, correct: 0, timeSpent: 0 },
-          emojiMovieQuiz: { attempted: 0, correct: 0, timeSpent: 0 }
-        };
-
-        let totalCorrectAnswers = 0;
-        let totalQuestions = 0;
-
-        statsData.forEach(stat => {
-          const quizKey = {
-            'flag': 'flagQuiz',
-            'capitals': 'capitalQuiz',
-            'geography': 'geographyQuiz',
-            'emoji-movie': 'emojiMovieQuiz'
-          }[stat.quizType];
-
-          if (quizKey) {
-            quizStats[quizKey] = {
-              attempted: stat.totalAttempts,
-              correct: Math.round(stat.accuracy * stat.totalAttempts / 100),
-              timeSpent: stat.totalAttempts * 5 // Assuming average 5 minutes per quiz
-            };
-            totalCorrectAnswers += stat.totalCorrectAnswers;
-            totalQuestions += stat.totalQuestions;
-          }
-        });
-
-        const totalQuizzes = attemptsData.length;
-        const highestScore = Math.max(...statsData.map(s => s.highestScore), 0);
-
-        setStats({
-          totalQuizzes,
-          totalQuestions,
-          correctAnswers: totalCorrectAnswers,
-          wrongAnswers: totalQuestions - totalCorrectAnswers,
-          totalTimeSpent: totalQuizzes * 5, // Assuming average 5 minutes per quiz
-          highestScore,
-          quizStats
-        });
-      } catch (error) {
-        console.error('Error fetching quiz statistics:', error);
-      }
-    };
-
     if (user) {
       fetchQuizStats();
     }
+  }, [user]);
+
+  // Refresh stats when component becomes visible (user navigates back to dashboard)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user) {
+        fetchQuizStats();
+      }
+    };
+
+    const handleFocus = () => {
+      if (user) {
+        fetchQuizStats();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [user]);
 
   const successRate = stats.totalQuestions > 0 ? (stats.correctAnswers / stats.totalQuestions * 100) : 0;
@@ -147,14 +178,54 @@ export default function Dashboard() {
               </h1>
               <p className="text-slate-400">Track your quiz progress and achievements</p>
             </div>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="p-4 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-2xl border border-white/10"
-            >
-              <FaUser className="text-3xl text-blue-400" />
-            </motion.div>
+            <div className="flex items-center space-x-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={fetchQuizStats}
+                disabled={loading}
+                className="p-3 bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-xl border border-white/10 hover:from-green-500/30 hover:to-emerald-600/30 transition-all duration-200 disabled:opacity-50"
+                title="Refresh Dashboard"
+              >
+                <FaSync className={`text-xl text-green-400 ${loading ? 'animate-spin' : ''}`} />
+              </motion.button>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="p-4 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-2xl border border-white/10"
+              >
+                <FaUser className="text-3xl text-blue-400" />
+              </motion.div>
+            </div>
           </div>
         </motion.div>
+
+        {/* Error Message */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400"
+          >
+            <div className="flex items-center">
+              <FaTimesCircle className="mr-3" />
+              {error}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400"
+          >
+            <div className="flex items-center">
+              <FaSync className="mr-3 animate-spin" />
+              Updating dashboard data...
+            </div>
+          </motion.div>
+        )}
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

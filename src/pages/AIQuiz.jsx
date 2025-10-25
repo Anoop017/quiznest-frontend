@@ -1,5 +1,6 @@
 // src/pages/AIQuiz.jsx
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { aiAPI } from "../utils/api";
 import { topics } from "../utils/topics"; // --- IMPORT THE TOPICS ---
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +13,7 @@ import {
   FaRedo,
   FaArrowRight,
   FaDice, // --- ADDED FOR RANDOM BUTTON ---
+  FaArrowLeft,
 } from "react-icons/fa";
 
 // (Animation variants remain the same)
@@ -243,7 +245,7 @@ export default function AIQuiz() {
 
   // --- The rest of the component ---
   return (
-    <div className="relative flex items-center justify-center min-h-screen p-4 overflow-hidden bg-slate-950 text-white">
+    <div className="relative flex items-center justify-center min-h-screen p-4 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
       {/* (Background elements are the same) */}
       <motion.div
         className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl"
@@ -255,6 +257,17 @@ export default function AIQuiz() {
         animate={{ x: [0, -50, 0], y: [0, -80, 0], scale: [1, 1.1, 1] }}
         transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
       />
+
+      {/* Back Button */}
+      <div className="absolute top-4 left-4 z-20">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/80 text-white rounded-lg backdrop-blur-sm border border-white/10 transition-all duration-200 hover:scale-105"
+        >
+          <FaArrowLeft className="text-sm" />
+          <span className="text-sm font-medium">Back to Home</span>
+        </Link>
+      </div>
 
       {/* Main Animated Card */}
       <motion.div

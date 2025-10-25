@@ -33,7 +33,7 @@ const Navigation = () => {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-40 bg-slate-900/80 backdrop-blur-xl border-b border-white/10">
+      <nav className="fixed top-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-xl border-b border-white/10 w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -61,13 +61,9 @@ const Navigation = () => {
             <div className="hidden md:flex items-center space-x-3">
               {isAuthenticated ? (
                 <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2 text-slate-300">
-                    <FaUser className="text-sm" />
-                    <span className="text-sm">{user.email}</span>
-                  </div>
                   <Link
                     to="/dashboard"
-                    className="flex items-center space-x-2 px-3 py-2 text-slate-300 hover:text-white transition-colors duration-200"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 font-medium"
                   >
                     <FaChartBar className="text-sm" />
                     <span className="text-sm">Dashboard</span>
@@ -131,14 +127,10 @@ const Navigation = () => {
                 <div className="pt-4 border-t border-white/10 space-y-3">
                   {isAuthenticated ? (
                     <div className="space-y-3">
-                      <div className="flex items-center space-x-2 text-slate-300">
-                        <FaUser className="text-sm" />
-                        <span className="text-sm">{user.email}</span>
-                      </div>
                       <Link
                         to="/dashboard"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center space-x-2 px-3 py-2 text-slate-300 hover:text-white transition-colors duration-200"
+                        className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 font-medium"
                       >
                         <FaChartBar className="text-sm" />
                         <span className="text-sm">Dashboard</span>

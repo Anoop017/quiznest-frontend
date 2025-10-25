@@ -116,7 +116,7 @@ export default function GeographyQuiz() {
 
   if (isComplete) {
     return (
-      <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-purple-900 via-fuchsia-800 to-indigo-900">
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <motion.div
           className="relative z-10 w-full max-w-md mx-4 p-6 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/10 shadow-2xl"
           initial={{ opacity: 0, scale: 0.96, y: 20 }}
@@ -147,7 +147,7 @@ export default function GeographyQuiz() {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center overflow-hidden bg-gradient-to-br from-purple-900 via-fuchsia-800 to-indigo-900">
+    <div className="min-h-screen relative flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Animated background orbs */}
       <motion.div
         className="absolute w-[450px] h-[450px] bg-gradient-to-br from-fuchsia-500 to-purple-400 rounded-full blur-3xl opacity-25 -top-40 -left-40"
@@ -171,10 +171,10 @@ export default function GeographyQuiz() {
         <div className="flex items-center justify-between mb-5">
           <Link
             to="/"
-            className="flex items-center gap-2 text-white/80 hover:text-white transition"
+            className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-sm border border-white/10 transition-all duration-200 hover:scale-105"
           >
-            <FaArrowLeft />
-            Home
+            <FaArrowLeft className="text-sm" />
+            <span className="text-sm font-medium">Back to Home</span>
           </Link>
           <div className="flex items-center gap-3">
             <p className="text-white/80 bg-white/10 px-3 py-1 rounded-full text-xs">
