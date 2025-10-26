@@ -1,3 +1,4 @@
+// src/pages/Dashboard.jsx
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -11,8 +12,6 @@ import {
   FaLandmark,
   FaGlobeAmericas,
   FaTheaterMasks,
-  FaArrowRight,
-  FaEdit,
   FaSync
 } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,10 +28,10 @@ export default function Dashboard() {
     highestScore: 0,
     lastUpdated: null,
     quizStats: {
-      flagQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 },
-      capitalQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 },
-      geographyQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 },
-      emojiMovieQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 }
+      flagQuiz: { attempted: 0, correct: 0, timeSpent: 0, accuracy: 0 },
+      capitalQuiz: { attempted: 0, correct: 0, timeSpent: 0, accuracy: 0 },
+      geographyQuiz: { attempted: 0, correct: 0, timeSpent: 0, accuracy: 0 },
+      emojiMovieQuiz: { attempted: 0, correct: 0, timeSpent: 0, accuracy: 0 }
     }
   });
   const [loading, setLoading] = useState(false);
@@ -42,23 +41,25 @@ export default function Dashboard() {
     setLoading(true);
     setError(null);
     try {
-      const [statsData, attemptsData] = await Promise.all([
-        quizAPI.getStats(),
-        quizAPI.getAttempts()
-      ]);
+      const statsData = await quizAPI.getStats();
+      
+      console.log('Fetched stats:', statsData); // Debug log
 
-      // Process the quiz statistics
+      // Initialize quiz stats
       const quizStats = {
-        flagQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 },
-        capitalQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 },
-        geographyQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 },
-        emojiMovieQuiz: { attempted: 0, correct: 0, timeSpent: 0, recentAttempts: [], accuracy: 0 }
+        flagQuiz: { attempted: 0, correct: 0, timeSpent: 0, accuracy: 0 },
+        capitalQuiz: { attempted: 0, correct: 0, timeSpent: 0, accuracy: 0 },
+        geographyQuiz: { attempted: 0, correct: 0, timeSpent: 0, accuracy: 0 },
+        emojiMovieQuiz: { attempted: 0, correct: 0, timeSpent: 0, accuracy: 0 }
       };
 
+      let totalQuizzes = 0;
       let totalCorrectAnswers = 0;
       let totalQuestions = 0;
       let totalTimeSpent = 0;
+      let highestScore = 0;
 
+      // Process each quiz type
       statsData.forEach(stat => {
         const quizKey = {
           'flag': 'flagQuiz',
@@ -69,20 +70,22 @@ export default function Dashboard() {
 
         if (quizKey) {
           quizStats[quizKey] = {
-            attempted: stat.totalAttempts,
-            correct: stat.totalCorrectAnswers,
-            timeSpent: stat.totalTimeSpent,
-            recentAttempts: stat.recentAttempts || [],
-            accuracy: stat.accuracy
+            attempted: stat.totalAttempts || 0,
+            correct: stat.totalCorrectAnswers || 0,
+            timeSpent: stat.totalTimeSpent || 0,
+            accuracy: stat.accuracy || 0
           };
-          totalCorrectAnswers += stat.totalCorrectAnswers;
-          totalQuestions += stat.totalQuestions;
-          totalTimeSpent += stat.totalTimeSpent;
+          
+          totalQuizzes += stat.totalAttempts || 0;
+          totalCorrectAnswers += stat.totalCorrectAnswers || 0;
+          totalQuestions += stat.totalQuestions || 0;
+          totalTimeSpent += stat.totalTimeSpent || 0;
+          
+          if (stat.highestScore > highestScore) {
+            highestScore = stat.highestScore;
+          }
         }
       });
-
-      const totalQuizzes = attemptsData.length;
-      const highestScore = Math.max(...statsData.map(s => s.highestScore), 0);
 
       setStats({
         totalQuizzes,
@@ -90,7 +93,7 @@ export default function Dashboard() {
         correctAnswers: totalCorrectAnswers,
         wrongAnswers: totalQuestions - totalCorrectAnswers,
         totalTimeSpent,
-        highestScore,
+        highestScore: Math.round(highestScore),
         lastUpdated: new Date(),
         quizStats
       });
@@ -102,61 +105,10 @@ export default function Dashboard() {
     }
   };
 
-  // Refresh stats periodically
-  useEffect(() => {
-    if (user) {
-      // Initial fetch
-      fetchQuizStats();
-      
-      // Set up periodic refresh every 30 seconds
-      const refreshInterval = setInterval(fetchQuizStats, 30000);
-      
-      // Cleanup
-      return () => clearInterval(refreshInterval);
-    }
-  }, [user]);
-
-  // Additional effect to refresh stats when component gains focus
-  useEffect(() => {
-    if (user) {
-      const handleFocus = () => {
-        fetchQuizStats();
-      };
-
-      window.addEventListener('focus', handleFocus);
-      
-      // Cleanup
-      return () => window.removeEventListener('focus', handleFocus);
-    }
-  }, [user]);
-
   useEffect(() => {
     if (user) {
       fetchQuizStats();
     }
-  }, [user]);
-
-  // Refresh stats when component becomes visible (user navigates back to dashboard)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && user) {
-        fetchQuizStats();
-      }
-    };
-
-    const handleFocus = () => {
-      if (user) {
-        fetchQuizStats();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
   }, [user]);
 
   const successRate = stats.totalQuestions > 0 ? (stats.correctAnswers / stats.totalQuestions * 100) : 0;
@@ -205,12 +157,12 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent mb-2">
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent mb-2">
                 Welcome back, {user?.email?.split('@')[0]}!
               </h1>
-              <p className="text-slate-400">Track your quiz progress and achievements</p>
+              <p className="text-slate-400 text-sm sm:text-base">Track your quiz progress and achievements</p>
             </div>
             <div className="flex items-center space-x-3">
               <motion.button
@@ -227,7 +179,7 @@ export default function Dashboard() {
                 whileHover={{ scale: 1.05 }}
                 className="p-4 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-2xl border border-white/10"
               >
-                <FaUser className="text-3xl text-blue-400" />
+                <FaUser className="text-2xl sm:text-3xl text-blue-400" />
               </motion.div>
             </div>
           </div>
@@ -262,7 +214,7 @@ export default function Dashboard() {
         )}
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {/* Total Quizzes */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -272,12 +224,12 @@ export default function Dashboard() {
           >
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-blue-500/20 rounded-xl">
-                <FaChartLine className="text-2xl text-blue-400" />
+                <FaChartLine className="text-xl sm:text-2xl text-blue-400" />
               </div>
               <span className="text-2xl font-bold text-blue-400">{stats.totalQuizzes}</span>
             </div>
-            <h3 className="text-white font-semibold mb-1">Total Quizzes</h3>
-            <p className="text-slate-400 text-sm">Quizzes completed</p>
+            <h3 className="text-white font-semibold mb-1 text-sm sm:text-base">Total Quizzes</h3>
+            <p className="text-slate-400 text-xs sm:text-sm">Quizzes completed</p>
           </motion.div>
 
           {/* Success Rate */}
@@ -289,12 +241,12 @@ export default function Dashboard() {
           >
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-green-500/20 rounded-xl">
-                <FaCheckCircle className="text-2xl text-green-400" />
+                <FaCheckCircle className="text-xl sm:text-2xl text-green-400" />
               </div>
               <span className="text-2xl font-bold text-green-400">{successRate.toFixed(1)}%</span>
             </div>
-            <h3 className="text-white font-semibold mb-1">Success Rate</h3>
-            <p className="text-slate-400 text-sm">{stats.correctAnswers} correct answers</p>
+            <h3 className="text-white font-semibold mb-1 text-sm sm:text-base">Success Rate</h3>
+            <p className="text-slate-400 text-xs sm:text-sm">{stats.correctAnswers} correct answers</p>
           </motion.div>
 
           {/* Time Spent */}
@@ -306,12 +258,12 @@ export default function Dashboard() {
           >
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-purple-500/20 rounded-xl">
-                <FaClock className="text-2xl text-purple-400" />
+                <FaClock className="text-xl sm:text-2xl text-purple-400" />
               </div>
               <span className="text-2xl font-bold text-purple-400">{formatTime(stats.totalTimeSpent)}</span>
             </div>
-            <h3 className="text-white font-semibold mb-1">Time Spent</h3>
-            <p className="text-slate-400 text-sm">Learning time</p>
+            <h3 className="text-white font-semibold mb-1 text-sm sm:text-base">Time Spent</h3>
+            <p className="text-slate-400 text-xs sm:text-sm">Learning time</p>
           </motion.div>
 
           {/* Highest Score */}
@@ -323,17 +275,17 @@ export default function Dashboard() {
           >
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-amber-500/20 rounded-xl">
-                <FaTrophy className="text-2xl text-amber-400" />
+                <FaTrophy className="text-xl sm:text-2xl text-amber-400" />
               </div>
               <span className="text-2xl font-bold text-amber-400">{stats.highestScore}</span>
             </div>
-            <h3 className="text-white font-semibold mb-1">Highest Score</h3>
-            <p className="text-slate-400 text-sm">Best performance</p>
+            <h3 className="text-white font-semibold mb-1 text-sm sm:text-base">Highest Score</h3>
+            <p className="text-slate-400 text-xs sm:text-sm">Best performance</p>
           </motion.div>
         </div>
 
         {/* Detailed Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-8">
           {/* Performance Overview */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -341,29 +293,29 @@ export default function Dashboard() {
             transition={{ delay: 0.5 }}
             className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
           >
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+            <h2 className="text-lg sm:text-xl font-bold text-white mb-6 flex items-center">
               <FaChartLine className="mr-3 text-blue-400" />
               Performance Overview
             </h2>
             
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between text-sm sm:text-base">
                 <span className="text-slate-300">Total Questions</span>
                 <span className="text-white font-semibold">{stats.totalQuestions}</span>
               </div>
               
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between text-sm sm:text-base">
                 <span className="text-slate-300">Correct Answers</span>
                 <span className="text-green-400 font-semibold">{stats.correctAnswers}</span>
               </div>
               
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between text-sm sm:text-base">
                 <span className="text-slate-300">Wrong Answers</span>
                 <span className="text-red-400 font-semibold">{stats.wrongAnswers}</span>
               </div>
               
               <div className="border-t border-white/10 pt-4">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-2 text-sm sm:text-base">
                   <span className="text-slate-300">Success Rate</span>
                   <span className="text-green-400 font-semibold">{successRate.toFixed(1)}%</span>
                 </div>
@@ -378,7 +330,7 @@ export default function Dashboard() {
               </div>
               
               <div className="border-t border-white/10 pt-4">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-2 text-sm sm:text-base">
                   <span className="text-slate-300">Failure Rate</span>
                   <span className="text-red-400 font-semibold">{failureRate.toFixed(1)}%</span>
                 </div>
@@ -401,7 +353,7 @@ export default function Dashboard() {
             transition={{ delay: 0.6 }}
             className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6"
           >
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+            <h2 className="text-lg sm:text-xl font-bold text-white mb-6 flex items-center">
               <FaTrophy className="mr-3 text-amber-400" />
               Quiz Breakdown
             </h2>
@@ -409,7 +361,7 @@ export default function Dashboard() {
             <div className="space-y-4">
               {quizTypes.map((quiz, index) => {
                 const quizStat = stats.quizStats[quiz.key];
-                const quizSuccessRate = quizStat.attempted > 0 ? (quizStat.correct / quizStat.attempted * 100) : 0;
+                const quizSuccessRate = quizStat.accuracy || 0;
                 
                 return (
                   <motion.div
@@ -424,13 +376,13 @@ export default function Dashboard() {
                         {quiz.icon}
                       </div>
                       <div>
-                        <h4 className="text-white font-medium">{quiz.name}</h4>
+                        <h4 className="text-white font-medium text-sm sm:text-base">{quiz.name}</h4>
                         <p className="text-slate-400 text-xs">{quizStat.attempted} attempts</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-green-400 font-semibold">{quizSuccessRate.toFixed(0)}%</div>
-                      <div className="text-slate-400 text-xs">{quizStat.correct}/{quizStat.attempted}</div>
+                      <div className="text-green-400 font-semibold text-sm sm:text-base">{quizSuccessRate.toFixed(0)}%</div>
+                      <div className="text-slate-400 text-xs">{formatTime(quizStat.timeSpent)}</div>
                     </div>
                   </motion.div>
                 );
@@ -438,25 +390,6 @@ export default function Dashboard() {
             </div>
           </motion.div>
         </div>
-
-        {/* Call to Action */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="bg-gradient-to-r from-blue-500/10 to-purple-600/10 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center"
-        >
-          <h2 className="text-2xl font-bold text-white mb-4">Ready for a Challenge?</h2>
-          <p className="text-slate-400 mb-6">Continue your learning journey with our interactive quizzes</p>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
-          >
-            Start New Quiz
-            <FaArrowRight className="ml-2" />
-          </motion.button>
-        </motion.div>
       </div>
     </div>
   );
