@@ -35,7 +35,7 @@ const CardNavigation = () => {
     {
       label: "More",
       links: [
-        { label: "Contact", href: "/contact" },
+        
       ],
     },
   ];
